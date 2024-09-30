@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing File</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        h1 {
+            color: #2b3a67;
+        }
+        #processing-status {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #394867;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        progress {
+            width: 100%;
+            height: 20px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Processing EEG Data...</h1>
+        <div class="progress-container">
+            <progress id="progress-bar" value="0" max="100"></progress>
+        </div>
+        <p id="processing-status">Initializing...</p>
+    </div>
+
+    <script>
+        function updateStatus() {
+            $.getJSON('/status/{{ filename }}', function(data) {
+                $('#processing-status').text(data.status);
+
+                if (data.status === 'Uploading complete. Processing started.') {
+                    $('#progress-bar').val(10);
+                } else if (data.status === 'Step 1: Calculating session scores...') {
+                    $('#progress-bar').val(50);
+                } else if (data.status === 'Step 2: Generating results...') {
+                    $('#progress-bar').val(80);
+                } else if (data.status === 'Completed') {
+                    $('#progress-bar').val(100);
+                    setTimeout(function() {
+                        window.location.href = "/results/{{ filename }}"; // Redirige a la página de resultados
+                    }, 1000);
+                } else if (data.status.startsWith('Error')) {
+                    $('#processing-status').text(data.status);
+                    $('#processing-status').css('color', 'red');
+                    $('#progress-bar').val(0);
+                } else {
+                    $('#progress-bar').val(0);
+                }
+
+                if (data.status !== 'Completed' && !data.status.startsWith('Error')) {
+                    setTimeout(updateStatus, 1000);
+                }
+            });
+        }
+
+        // Iniciar la actualización del estado
+        updateStatus();
+    </script>
+</body>
+</html>

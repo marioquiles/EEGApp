@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEG Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 40px;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+        }
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+        }
+        h1, h2 {
+            color: #2b3a67;
+        }
+        h3 {
+            color: #394867;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #ccc;
+            background-color: #ffffff;
+            border-radius: 10px;
+        }
+        .toggle-btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1em;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .toggle-btn:hover {
+            background-color: #2980b9;
+        }
+        .toggle-btn i {
+            margin-right: 8px;
+        }
+        .details-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            background: #f9fbfc;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        .scores-list {
+            margin-top: 20px;
+            column-count: 2;
+            column-gap: 20px;
+            list-style: none;
+            padding: 0;
+            font-size: 1.1em;
+        }
+        .scores-list li {
+            padding: 8px 0;
+        }
+        .chart-container {
+            margin-top: 30px;
+            width: 100%;
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+        .final-score {
+            margin-top: 50px;
+            font-size: 1.5em;
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        a {
+            display: inline-block;
+            margin-top: 30px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #21618c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>EEG Analysis Results <i class="fas fa-brain"></i></h1>
+        <h2>File: {{ filename }}</h2>
+
+        <!-- Dimensión 1: Score de Sesiones -->
+        <div class="section">
+            <h3>Overall Session Score:</h3>
+            <p>{{ results.final_score_sessions }}</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('session-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Session Details
+            </button>
+
+            <div class="details-container" id="session-details-container">
+                <h3>Number of Subjects: {{ results.num_sujetos }}</h3>
+                <h3>Expected Sessions: {{ results.sessions_expected }}</h3>
+
+                <h3>Session Completion Scores per Subject:</h3>
+                <ul class="scores-list">
+                {% for score in results.session_scores %}
+                    <li>Subject {{ loop.index }}: {{ score }}</li>
+                {% endfor %}
+                </ul>
+
+                <div class="chart-container">
+                    <canvas id="sessionScoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dimensión 2: Score de Longitud de Sesiones -->
+        <div class="section">
+            <h3>Overall Length Score for Dataset:</h3>
+            <p>{{ results.overall_score_length }}</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('length-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Length Details
+            </button>
+
+            <div class="details-container" id="length-details-container">
+                <h3>Length of Sessions Score per Channel:</h3>
+                <ul class="scores-list">
+                {% for score in results.scores_per_channel %}
+                    <li>Channel {{ loop.index }}: {{ score }}</li>
+                {% endfor %}
+                </ul>
+
+                <div class="chart-container">
+                    <canvas id="lengthScoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dimensión 3: Análisis de Outliers -->
+        <div class="section">
+            <h3>Outlier Analysis:</h3>
+            <p>Number of Outlier Windows per Subject:</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('outlier-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Outlier Details
+            </button>
+
+            <div class="details-container" id="outlier-details-container">
+                <h3>Total Number of Outlier Windows in Dataset: {{ results.total_windows }}</h3>
+                
+                <h3>Number of Outlier Windows per Subject:</h3>
+                <ul class="scores-list">
+                {% for count in results.num_outlier_windows %}
+                    <li>Subject {{ loop.index }}: {{ count }}</li>
+                {% endfor %}
+                </ul>
+
+                <div class="chart-container">
+                    <canvas id="outlierChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Puntaje Final del Dataset -->
+        <div class="final-score">
+            <h3>Final Score for Dataset:</h3>
+            <p>{{ (results.final_score_sessions + results.overall_score_length) / 2 }}</p>
+        </div>
+
+        <a href="/"><i class="fas fa-arrow-left"></i> Upload another file</a>
+    </div>
+
+    <script>
+        function toggleDetails(containerId) {
+            var container = document.getElementById(containerId);
+            if (container.style.display === "none" || container.style.display === "") {
+                container.style.display = "block";
+            } else {
+                container.style.display = "none";
+            }
+        }
+
+        // Gráfico de Puntajes de Sesiones por Sujeto
+        const sessionLabels = [
+            {% for i in range(1, results.num_sujetos + 1) %}
+                "Subject {{ i }}",
+            {% endfor %}
+        ];
+        const sessionScores = [
+            {% for score in results.session_scores %}
+                {{ score }},
+            {% endfor %}
+        ];
+
+        const sessionData = {
+            labels: sessionLabels,
+            datasets: [{
+                label: 'Session Completion Score per Subject',
+                data: sessionScores,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        new Chart(
+            document.getElementById('sessionScoreChart'),
+            {
+                type: 'bar',
+                data: sessionData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 110,
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Gráfico de Outliers por Sujeto
+        const outlierLabels = [
+            {% for i in range(1, results.num_outlier_windows | length + 1) %}
+                "Subject {{ i }}",
+            {% endfor %}
+        ];
+        const outlierData = [
+            {% for count in results.num_outlier_windows %}
+                {{ count }},
+            {% endfor %}
+        ];
+
+        new Chart(
+            document.getElementById('outlierChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: outlierLabels,
+                    datasets: [{
+                        label: 'Number of Outlier Windows per Subject',
+                        data: outlierData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Outlier Windows'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    </script>
+</body>
+</html>

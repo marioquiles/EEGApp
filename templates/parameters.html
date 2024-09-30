@@ -1,0 +1,12 @@
+<form method="POST">
+    <label for="sampling_frequency">Sampling Frequency:</label>
+    <input type="number" step="any" name="sampling_frequency" required><br>
+
+    <label for="window_size">Window Size:</label>
+    <input type="number" name="window_size" required><br>
+
+    <label for="overlap">Overlap (0-1):</label>
+    <input type="number" step="any" name="overlap" min="0" max="1" required><br>
+
+    <input type="submit" value="Submit">
+</form>
