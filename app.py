@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash, jso
 import os
 import numpy as np
 from werkzeug.utils import secure_filename
-from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics
+from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics
 import time  # Para simular el tiempo de procesamiento
 from threading import Thread  # Importar Thread para procesamiento en segundo plano
 import pickle
@@ -93,8 +93,13 @@ def get_parameters(filename):
                 processing_status[filename] = 'Step 3: Calculating window outliers...'
                 outlier_results = process_outlier_metrics(eeg_data, window_size, overlap)
 
+                # Paso 4: Calcular el desbalance de clases
+                processing_status[filename] = 'Step 4: Calculating class imbalance...'
+                imbalance_results = process_labels_metrics(eeg_labels)
+
+                
                 # Combinar todos los resultados
-                results = {**session_results, **length_results, **outlier_results}
+                results = {**session_results, **length_results, **outlier_results, **imbalance_results}
 
                 # Guardar los resultados en el diccionario de estado usando una nueva clave
                 processing_status[f'{filename}_results'] = results

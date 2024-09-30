@@ -1,6 +1,7 @@
 from processing.calculate_sessions import calculate_sessions_expected, calculate_session_scores, calculate_final_score
 from processing.input_validation import validate_window_size
 from processing.calculate_length_scores import calculate_length_scores
+from processing.calculate_labels import calculate_class_imbalance_score
 from .calculate_outliers import calculate_outliers, calculate_outlier_score
 import numpy as np
 
@@ -71,4 +72,20 @@ def process_outlier_metrics(eeg_data, window_size, overlap):
         return {'error': str(e)}
 
 
+def process_labels_metrics(eeg_labels):
+    """
+    Procesa las etiquetas EEG para calcular el desbalance de clases por sujeto y el puntaje total.
 
+    Parámetros:
+        eeg_labels (numpy array): Array de dimensiones [num_subjects, num_samples] con las etiquetas de los datos.
+
+    Retorna:
+        Un diccionario con el puntaje de desbalance de clases por sujeto y el puntaje total.
+    """
+    # Calcular el puntaje de desbalance de clases por sujeto y el puntaje total
+    imbalance_scores, total_imbalance_score = calculate_class_imbalance_score(eeg_labels)
+    
+    return {
+        'class_imbalance_scores': imbalance_scores,
+        'total_imbalance_score': total_imbalance_score
+    }

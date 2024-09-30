@@ -117,19 +117,6 @@
         }
     </style>
 </head>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EEG Analysis Results</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <style>
-        /* Estilo existente mantenido aquí */
-    </style>
-</head>
 <body>
     <div class="container">
         <h1>EEG Analysis Results <i class="fas fa-brain"></i></h1>
@@ -174,7 +161,7 @@
                 <h3>Length of Sessions Score per Channel:</h3>
                 <ul class="scores-list">
                 {% for score in results.scores_per_channel %}
-                    <li>Channel {{ loop.index }}: {{ score }}</li>
+                    <li>Subject {{ loop.index }}: {{ score }}</li>
                 {% endfor %}
                 </ul>
 
@@ -197,7 +184,7 @@
                 <h3>Percentage of Windows with Outliers per Subject:</h3>
                 <ul class="scores-list">
                 {% for subject, percentage in results.outlier_percentages.items() %}
-                    <li>Subject {{ loop.index }}: {{ '%.2f'|format(percentage) }}% </li>
+                    <li>Subject {{ loop.index }}: {{ '%.2f'|format(percentage) }}%</li>
                 {% endfor %}
                 </ul>
 
@@ -207,12 +194,32 @@
             </div>
         </div>
 
+        <!-- Dimensión 4: Análisis de Desbalance de Clases -->
+        <div class="section">
+            <h3>Class Imbalance Analysis:</h3>
+            <p>Overall Class Imbalance Score: {{ results.total_imbalance_score }}</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('imbalance-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Imbalance Details
+            </button>
+
+            <div class="details-container" id="imbalance-details-container">
+                <h3>Class Imbalance Score per Subject:</h3>
+                <ul class="scores-list">
+                {% for score in results.class_imbalance_scores %}
+                    <li>Subject {{ loop.index }}: {{ score }}</li>
+                {% endfor %}
+                </ul>
+
+                <div class="chart-container">
+                    <canvas id="imbalanceScoreChart"></canvas>
+                </div>
+            </div>
 
         <!-- Puntaje Final del Dataset -->
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score) / 3 }}</p>
-        </div>
+            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score) / 4 }}</p>        </div>
 
         <a href="/"><i class="fas fa-arrow-left"></i> Upload another file</a>
     </div>
@@ -355,7 +362,49 @@
                 }
             }
         );
+
+        // Gráfico de Desbalance de Clases por Sujeto
+        const imbalanceLabels = [
+            {% for i in range(1, results.class_imbalance_scores | length + 1) %}
+                "Subject {{ i }}",
+            {% endfor %}
+        ];
+        const imbalanceScores = [
+            {% for score in results.class_imbalance_scores %}
+                {{ score }},
+            {% endfor %}
+        ];
+
+        new Chart(
+            document.getElementById('imbalanceScoreChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: imbalanceLabels,
+                    datasets: [{
+                        label: 'Class Imbalance Score per Subject',
+                        data: imbalanceScores,
+                        backgroundColor: 'rgba(255, 205, 86, 0.6)',
+                        borderColor: 'rgba(255, 205, 86, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Imbalance Score'
+                            }
+                        }
+                    }
+                }
+            }
+        );
     </script>
 </body>
-</html>
 </html>
