@@ -2,15 +2,16 @@ from flask import Flask, request, render_template, redirect, url_for, flash, jso
 import os
 import numpy as np
 from werkzeug.utils import secure_filename
-from processing.eeg_processing import process_eeg_data, process_eeg_outliers
+from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics
 import time  # Para simular el tiempo de procesamiento
 from threading import Thread  # Importar Thread para procesamiento en segundo plano
+import pickle
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './uploads'
 app.config['SECRET_KEY'] = 'tu_clave_secreta'
 
-ALLOWED_EXTENSIONS = {'npz'}
+ALLOWED_EXTENSIONS = {'pkl'}
 processing_status = {}  # Diccionario para mantener el estado del procesamiento por archivo
 file_data = {}  # Diccionario para almacenar datos de archivos subidos (frecuencia, etc.)
 
@@ -21,31 +22,41 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+    if request.method == 'GET':
+        # Mostrar el formulario de subida de archivos
+        return render_template('upload.html')
 
-        # Inicializar el estado del procesamiento
-        processing_status[filename] = 'Uploading complete. Please provide additional parameters.'
+    # Procesar la solicitud POST cuando se sube el archivo
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
 
-        # Almacenar el archivo subido para su posterior procesamiento
-        file_data[filename] = filepath
+            # Inicializar el estado del procesamiento
+            processing_status[filename] = 'Uploading complete. Please provide additional parameters.'
 
-        # Redirigir al formulario para obtener la frecuencia de muestreo y tamaño de ventana
-        return redirect(url_for('get_parameters', filename=filename))
-    else:
-        flash('File not allowed')
-        return redirect(request.url)
+            # Almacenar el archivo subido para su posterior procesamiento
+            file_data[filename] = filepath
+
+            # Redirigir al formulario para obtener la frecuencia de muestreo y tamaño de ventana
+            return redirect(url_for('get_parameters', filename=filename))
+        else:
+            flash('File not allowed')
+            return redirect(request.url)
+
 
 @app.route('/get_parameters/<filename>', methods=['GET', 'POST'])
 def get_parameters(filename):
@@ -54,24 +65,36 @@ def get_parameters(filename):
         window_size = int(request.form['window_size'])
         overlap = float(request.form['overlap'])
         
+                # Validar que el overlap sea menor que el tamaño de la ventana
+        if overlap >= window_size:
+            flash('Overlap must be less than the window size.')
+            return redirect(request.url)
+        
         # Validar y procesar el archivo en segundo plano
         def process_data(filepath, filename, sampling_frequency, window_size, overlap):
             try:
-                data = np.load(filepath)
-                eeg_data = data['data']
+                # Abrir el archivo con pickle
+                with open(filepath, 'rb') as file:
+                    data = pickle.load(file)
 
-                # Procesar otras métricas primero
-                processing_status[filename] = 'Step 1: Calculating other metrics...'
-                time.sleep(2)  # Simulación de procesamiento
-                results = process_eeg_data(eeg_data)
+                # Extraer los datos del diccionario
+                eeg_data = data['eeg_data']
+                eeg_labels = data['eeg_labels']
+
+                # Procesar métricas relacionadas con las sesiones
+                processing_status[filename] = 'Step 1: Calculating session metrics...'
+                session_results = process_session_metrics(eeg_data)
+
+                # Procesar métricas relacionadas con la longitud de las sesiones
+                processing_status[filename] = 'Step 2: Calculating length metrics...'
+                length_results = process_length_metrics(eeg_data)
 
                 # Procesar la nueva dimensión de outliers
-                processing_status[filename] = 'Step 2: Calculating window outliers...'
-                time.sleep(2)  # Simulación de procesamiento
-                outlier_results = process_eeg_outliers(eeg_data, sampling_frequency, window_size, overlap)
+                processing_status[filename] = 'Step 3: Calculating window outliers...'
+                outlier_results = process_outlier_metrics(eeg_data, window_size, overlap)
 
-                # Añadir los resultados de outliers al diccionario de resultados
-                results.update(outlier_results)
+                # Combinar todos los resultados
+                results = {**session_results, **length_results, **outlier_results}
 
                 # Guardar los resultados en el diccionario de estado usando una nueva clave
                 processing_status[f'{filename}_results'] = results

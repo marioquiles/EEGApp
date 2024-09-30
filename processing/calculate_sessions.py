@@ -2,12 +2,12 @@ import numpy as np
 
 def calculate_sessions_expected(eeg_data):
     """
-    Calcula el número de sesiones esperadas como la media de las sesiones realizadas para todos los sujetos.
+    Calcula el número de sesiones esperadas como la media del número de sesiones realizadas para todos los sujetos.
     """
-    sessions_per_subject = np.sum(~np.isnan(eeg_data), axis=(2, 3))  # Contar sesiones válidas por sujeto
-    sessions_realized = np.count_nonzero(sessions_per_subject, axis=1)  # Número de sesiones realizadas por cada sujeto
-    sessions_expected = np.mean(sessions_realized)  # Media de sesiones esperadas para todos los sujetos
-    return sessions_realized, sessions_expected
+    sessions_per_subject = [len(sessions) for sessions in eeg_data.values()]  # Contar sesiones para cada sujeto
+    sessions_expected = np.mean(sessions_per_subject)  # Media de sesiones esperadas para todos los sujetos
+    return sessions_per_subject, sessions_expected
+
 
 def calculate_session_scores(sessions_realized, sessions_expected):
     """
@@ -21,6 +21,7 @@ def calculate_session_scores(sessions_realized, sessions_expected):
         for sessions in sessions_realized
     ]
     return scores
+
 
 
 def calculate_final_score(scores):

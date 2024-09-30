@@ -1,62 +1,60 @@
 import numpy as np
-
-import numpy as np
 import pandas as pd
 
-def calculate_outliers(eeg_data, sampling_frequency, window_size, overlap=0):
+def calculate_outliers(eeg_data, window_size, overlap=0):
     """
-    Calcula el número de ventanas con valores atípicos y el total de ventanas.
+    Calcula el porcentaje de ventanas con valores atípicos en los datos EEG.
 
     Parámetros:
-        eeg_data: Array de datos EEG con dimensiones (sujetos, sesiones, canales, muestras).
-        sampling_frequency: Frecuencia de muestreo del archivo.
-        window_size: Tamaño de la ventana.
+        eeg_data: Diccionario con los datos EEG (formato: sujetos -> sesiones -> canales).
+        window_size: Tamaño de la ventana para dividir los datos.
         overlap: Porcentaje de solapamiento entre ventanas (valor entre 0 y 1).
 
     Retorna:
-        num_outlier_windows: Número de ventanas con valores atípicos por sujeto y canal.
-        total_windows: Número total de ventanas por sujeto y canal.
+        outlier_percentages: Diccionario con el porcentaje de ventanas con outliers por sujeto.
     """
-    if window_size < (sampling_frequency / 4) or window_size > eeg_data.shape[-1]:
-        raise ValueError("El tamaño de la ventana no cumple con las restricciones.")
-    
-    # Calcular el número de pasos de la ventana teniendo en cuenta el solapamiento
-    step_size = int(window_size * (1 - overlap))
-    if step_size <= 0:
-        raise ValueError("El tamaño del paso debe ser mayor que cero. Ajusta el solapamiento o el tamaño de la ventana.")
-    
-    # Inicializar las listas para almacenar resultados
-    num_outlier_windows = []
-    total_windows = []
+    outlier_percentages = {}
 
-    # Iterar sobre sujetos, sesiones y canales
-    for subject in range(eeg_data.shape[0]):
-        subject_outlier_windows = []
-        subject_total_windows = []
-        for session in range(eeg_data.shape[1]):
-            for channel in range(eeg_data.shape[2]):
-                channel_data = eeg_data[subject, session, channel, :]
-                rolling_windows = pd.Series(channel_data).rolling(window=window_size, min_periods=1, step=step_size)
+    # Iterar sobre los sujetos
+    for subject_id, sessions in eeg_data.items():
+        total_windows = 0
+        outlier_windows = 0
 
-                # Definir magnitud media del canal
-                mean_magnitude = np.mean(np.abs(channel_data))
-                
-                # Contar ventanas con outliers
-                num_outliers = 0
-                total = 0
+        # Iterar sobre sesiones y canales para cada sujeto
+        for session_data in sessions.values():
+            for channel_data in session_data:
+                # Calcular la desviación estándar de toda la señal para el canal y sesión actuales
+                mean_channel = np.mean(channel_data)
+                std_dev_channel = np.std(channel_data)
 
-                for window in rolling_windows:
-                    total += 1
-                    if np.any(np.abs(window) > 4 * mean_magnitude):
-                        num_outliers += 1
+                # Calcular el número de pasos de la ventana teniendo en cuenta el solapamiento
+                step_size = int(window_size - overlap)
+                if step_size <= 0:
+                    raise ValueError("El tamaño del paso debe ser mayor que cero. Ajusta el solapamiento o el tamaño de la ventana.")
 
-                subject_outlier_windows.append(num_outliers)
-                subject_total_windows.append(total)
+                # Dividir los datos en ventanas
+                for i in range(0, len(channel_data) - window_size + 1, step_size):
+                    window = channel_data[i:i + window_size]
 
-        num_outlier_windows.append(subject_outlier_windows)
-        total_windows.append(subject_total_windows)
+                    # Comprobar si hay un outlier en la ventana usando la desviación estándar de toda la señal
+                    if std_dev_channel > 0:  # Evitar división por cero
+                        z_scores = np.abs(window - mean_channel) / std_dev_channel
+                        if np.any(z_scores > 4):
+                            outlier_windows += 1
 
-    return num_outlier_windows, total_windows
+                    total_windows += 1
+
+        # Calcular el porcentaje de ventanas con outliers para el sujeto
+        if total_windows > 0:
+            percentage_outliers = (outlier_windows / total_windows) * 100
+        else:
+            percentage_outliers = 0
+
+        outlier_percentages[subject_id] = percentage_outliers
+
+    return outlier_percentages
+
+
 
 
 def calculate_outlier_score(num_outlier_windows, total_windows):
@@ -64,17 +62,35 @@ def calculate_outlier_score(num_outlier_windows, total_windows):
     Calcula el score basado en la proporción de ventanas normales y con outliers.
 
     Parámetros:
-        num_outlier_windows: Número de ventanas con valores atípicos.
-        total_windows: Número total de ventanas.
+        num_outlier_windows: Diccionario con el número de ventanas con valores atípicos.
+        total_windows: Diccionario con el número total de ventanas.
 
     Retorna:
-        score: Puntaje en un rango de [0-100].
+        scores: Diccionario con el puntaje de outliers para cada sujeto y sesión.
     """
-    if total_windows == 0:
-        return 0  # Si no hay ventanas, devolver 0 como puntaje
+    scores = {}
 
-    proportion_normals = (total_windows - num_outlier_windows) / total_windows
-    proportion_outliers = num_outlier_windows / total_windows
-    score = (proportion_normals - proportion_outliers) * 100
+    # Iterar sobre los sujetos y sesiones
+    for subject_id in num_outlier_windows.keys():
+        subject_scores = {}
 
-    return score
+        for session_id in num_outlier_windows[subject_id].keys():
+            session_num_outliers = num_outlier_windows[subject_id][session_id]
+            session_total_windows = total_windows[subject_id][session_id]
+
+            session_scores = []
+            for num_outliers, total in zip(session_num_outliers, session_total_windows):
+                if total == 0:
+                    session_scores.append(0)  # Si no hay ventanas, devolver 0 como puntaje
+                else:
+                    proportion_normals = (total - num_outliers) / total
+                    proportion_outliers = num_outliers / total
+                    score = (proportion_normals - proportion_outliers) * 100
+                    session_scores.append(score)
+
+            subject_scores[session_id] = session_scores
+
+        scores[subject_id] = subject_scores
+
+    return scores
+

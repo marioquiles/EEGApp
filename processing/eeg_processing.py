@@ -1,82 +1,74 @@
 from processing.calculate_sessions import calculate_sessions_expected, calculate_session_scores, calculate_final_score
-from processing.calculate_length_scores import calculate_length_scores
 from processing.input_validation import validate_window_size
+from processing.calculate_length_scores import calculate_length_scores
 from .calculate_outliers import calculate_outliers, calculate_outlier_score
 import numpy as np
 
-def process_eeg_data(eeg_data):
+def process_session_metrics(eeg_data):
     """
-    Punto de entrada para procesar los datos EEG.
+    Calcula métricas relacionadas con el número de sesiones por sujeto.
+
+    Parámetros:
+        eeg_data: Diccionario con los datos EEG.
+
+    Retorna:
+        Un diccionario con los resultados de las métricas relacionadas con sesiones.
     """
-    # Calcular métricas relacionadas con las sesiones
     sessions_realized, sessions_expected = calculate_sessions_expected(eeg_data)
     session_scores = calculate_session_scores(sessions_realized, sessions_expected)
     final_score_sessions = calculate_final_score(session_scores)
 
-    # Calcular métricas relacionadas con la longitud de las sesiones
-    scores_per_channel, overall_score_length = calculate_length_scores(eeg_data)
-
-    # Preparar los resultados para ser devueltos
     results = {
         'session_scores': session_scores,
         'final_score_sessions': final_score_sessions,
         'num_sujetos': len(sessions_realized),
-        'sessions_expected': sessions_expected,
-        'scores_per_channel': scores_per_channel,
-        'overall_score_length': overall_score_length,
+        'sessions_expected': sessions_expected
     }
+
     return results
 
-def process_eeg_outliers(eeg_data, sampling_frequency, window_size, overlap):
+def process_length_metrics(eeg_data):
     """
-    Procesa los datos EEG para calcular los outliers.
+    Calcula métricas relacionadas con la longitud de las sesiones.
 
     Parámetros:
-        eeg_data: Array de datos EEG con dimensiones (sujetos, sesiones, canales, muestras).
-        sampling_frequency: Frecuencia de muestreo del archivo.
-        window_size: Tamaño de la ventana.
-        overlap: Porcentaje de solapamiento entre ventanas (valor entre 0 y 1).
+        eeg_data: Diccionario con los datos EEG.
 
     Retorna:
-        result: Diccionario con los resultados de outliers por sujeto.
+        Un diccionario con los resultados de las métricas relacionadas con la longitud de las sesiones.
     """
+    # Calcular métricas relacionadas con la longitud de las sesiones
+    scores_per_channel, overall_score_length = calculate_length_scores(eeg_data)
+
+    results = {
+        'scores_per_channel': scores_per_channel,
+        'overall_score_length': overall_score_length
+    }
+
+    return results
+
+def process_outlier_metrics(eeg_data, window_size, overlap):
     try:
-        # Calcular outliers usando la función calculate_outliers
-        num_outlier_windows, total_windows = calculate_outliers(eeg_data, sampling_frequency, window_size, overlap)
+        # Calcular el porcentaje de ventanas con outliers usando la función calculate_outliers
+        outlier_percentages = calculate_outliers(eeg_data, window_size, overlap)
 
-        # Imprimir para depurar
-        print("num_outlier_windows:", num_outlier_windows)
-        print("total_windows:", total_windows)
+        # Calcular la puntuación final para los outliers
+        mean_outlier_percentage = np.mean(list(outlier_percentages.values()))
+        final_outlier_score = max(0, 100 - mean_outlier_percentage)
+        final_outlier_score = round(final_outlier_score, 2)
 
-        # Calcular el porcentaje de ventanas con outliers para cada sujeto
-        percentage_outlier_windows_per_subject = []
-        for subject_idx in range(len(num_outlier_windows)):
-            total_outliers_for_subject = sum(num_outlier_windows[subject_idx])
-            total_windows_for_subject = sum(total_windows[subject_idx])
-            if total_windows_for_subject > 0:
-                percentage_outliers = (total_outliers_for_subject / total_windows_for_subject) * 100
-                # Calcular el puntaje de outliers usando la función ya definida
-                score = calculate_outlier_score(total_outliers_for_subject, total_windows_for_subject)
-            else:
-                percentage_outliers = 0
-                score = 0
-
-            percentage_outlier_windows_per_subject.append({
-                'subject_index': subject_idx,
-                'percentage_outliers': percentage_outliers,
-                'score': score
-            })
-
-        # Crear el diccionario de resultados
+        # Preparar el resultado final
         result = {
-            'percentage_outlier_windows': percentage_outlier_windows_per_subject
+            'outlier_percentages': outlier_percentages,
+            'final_outlier_score': final_outlier_score
         }
 
-        # Imprimir resultados para depuración
-        print("Result:", result)
-
+        print(result)  # Agregar esto para verificar el contenido del resultado
         return result
 
     except Exception as e:
-        print(f"Error en process_eeg_outliers: {e}")
+        print(f"Error en process_outlier_metrics: {e}")
         return {'error': str(e)}
+
+
+

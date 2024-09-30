@@ -117,6 +117,19 @@
         }
     </style>
 </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEG Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        /* Estilo existente mantenido aquí */
+    </style>
+</head>
 <body>
     <div class="container">
         <h1>EEG Analysis Results <i class="fas fa-brain"></i></h1>
@@ -174,32 +187,31 @@
         <!-- Dimensión 3: Análisis de Outliers -->
         <div class="section">
             <h3>Outlier Analysis:</h3>
-            <p>Number of Outlier Windows per Subject:</p>
+            <p>Overall Outlier Windows Score: {{ results.final_outlier_score }}</p>
 
             <button class="toggle-btn" onclick="toggleDetails('outlier-details-container')">
                 <i class="fas fa-info-circle"></i> Show/Hide Outlier Details
             </button>
 
             <div class="details-container" id="outlier-details-container">
-                <h3>Total Number of Outlier Windows in Dataset: {{ results.total_windows }}</h3>
-                
-                <h3>Number of Outlier Windows per Subject:</h3>
+                <h3>Percentage of Windows with Outliers per Subject:</h3>
                 <ul class="scores-list">
-                {% for count in results.num_outlier_windows %}
-                    <li>Subject {{ loop.index }}: {{ count }}</li>
+                {% for subject, percentage in results.outlier_percentages.items() %}
+                    <li>Subject {{ loop.index }}: {{ '%.2f'|format(percentage) }}% </li>
                 {% endfor %}
                 </ul>
 
                 <div class="chart-container">
-                    <canvas id="outlierChart"></canvas>
+                    <canvas id="outlierPercentageChart"></canvas>
                 </div>
             </div>
         </div>
 
+
         <!-- Puntaje Final del Dataset -->
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length) / 2 }}</p>
+            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score) / 3 }}</p>
         </div>
 
         <a href="/"><i class="fas fa-arrow-left"></i> Upload another file</a>
@@ -227,22 +239,20 @@
             {% endfor %}
         ];
 
-        const sessionData = {
-            labels: sessionLabels,
-            datasets: [{
-                label: 'Session Completion Score per Subject',
-                data: sessionScores,
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        };
-
         new Chart(
             document.getElementById('sessionScoreChart'),
             {
                 type: 'bar',
-                data: sessionData,
+                data: {
+                    labels: sessionLabels,
+                    datasets: [{
+                        label: 'Session Completion Score per Subject',
+                        data: sessionScores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -260,29 +270,29 @@
             }
         );
 
-        // Gráfico de Outliers por Sujeto
-        const outlierLabels = [
-            {% for i in range(1, results.num_outlier_windows | length + 1) %}
-                "Subject {{ i }}",
+        // Gráfico de Longitud de Sesiones por Canal
+        const lengthLabels = [
+            {% for i in range(1, results.scores_per_channel | length + 1) %}
+                "Channel {{ i }}",
             {% endfor %}
         ];
-        const outlierData = [
-            {% for count in results.num_outlier_windows %}
-                {{ count }},
+        const lengthScores = [
+            {% for score in results.scores_per_channel %}
+                {{ score }},
             {% endfor %}
         ];
 
         new Chart(
-            document.getElementById('outlierChart'),
+            document.getElementById('lengthScoreChart'),
             {
                 type: 'bar',
                 data: {
-                    labels: outlierLabels,
+                    labels: lengthLabels,
                     datasets: [{
-                        label: 'Number of Outlier Windows per Subject',
-                        data: outlierData,
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
+                        label: 'Length Score per Channel',
+                        data: lengthScores,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                     }]
                 },
@@ -292,9 +302,53 @@
                     scales: {
                         y: {
                             beginAtZero: true,
+                            max: 100,
                             title: {
                                 display: true,
-                                text: 'Number of Outlier Windows'
+                                text: 'Score'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Gráfico de Porcentajes de Ventanas con Outliers por Sujeto
+        const outlierPercentageLabels = [
+            {% for subject in results.outlier_percentages.keys() %}
+                "Subject {{ loop.index }}",
+            {% endfor %}
+        ];
+        const outlierPercentageData = [
+            {% for percentage in results.outlier_percentages.values() %}
+                {{ '%.2f'|format(percentage) }},
+            {% endfor %}
+        ];
+
+        new Chart(
+            document.getElementById('outlierPercentageChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: outlierPercentageLabels,
+                    datasets: [{
+                        label: 'Percentage of Outlier Windows per Subject',
+                        data: outlierPercentageData,
+                        backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage of Outlier Windows'
                             }
                         }
                     }
@@ -303,4 +357,5 @@
         );
     </script>
 </body>
+</html>
 </html>
