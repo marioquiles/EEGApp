@@ -3,7 +3,11 @@ from processing.input_validation import validate_window_size
 from processing.calculate_length_scores import calculate_length_scores
 from processing.calculate_labels import calculate_class_imbalance_score
 from .calculate_outliers import calculate_outliers, calculate_outlier_score
+from processing.extract_emotional_features import extract_emotional_features
+from processing.calculate_overlap import calculate_class_overlap
 import numpy as np
+import os
+import pickle
 
 def process_session_metrics(eeg_data):
     """
@@ -89,3 +93,57 @@ def process_labels_metrics(eeg_labels):
         'class_imbalance_scores': imbalance_scores,
         'total_imbalance_score': total_imbalance_score
     }
+
+# Función para procesar y guardar características
+def process_eeg_features(eeg_data, filename, sampling_rate=128, window_size=256, overlap=128, output_folder="features/"):
+    """
+    Extrae las características emocionales de los datos EEG y las guarda en un archivo.
+
+    Parámetros:
+        eeg_data (dict): Diccionario con los datos EEG de dimensiones {sujeto: {sesión: (num_canales, num_muestras)}}.
+        sampling_rate (int): Frecuencia de muestreo de los datos EEG.
+        window_size (int): Tamaño de la ventana en muestras.
+        overlap (int): Cantidad de solapamiento entre ventanas en muestras.
+        output_folder (str): Directorio para guardar los archivos de características.
+
+    Retorna:
+        feature_filepath (str): Ruta al archivo donde se han guardado las características.
+    """
+    # Extraer características usando la función extract_emotional_features
+    features = extract_emotional_features(eeg_data, sampling_rate, window_size, overlap)
+
+    # Crear la carpeta de salida si no existe
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Guardar las características extraídas en un archivo
+    feature_filepath = os.path.join(output_folder, filename + "_features")
+    with open(feature_filepath, 'wb') as f:
+        pickle.dump(features, f)
+
+    print(f"Características extraídas y guardadas en {feature_filepath}")
+    return feature_filepath
+
+def process_class_overlap(eeg_labels, features=None):
+    """
+    Procesa el solapamiento entre clases usando las características extraídas.
+
+    Parámetros:
+        eeg_labels (dict): Diccionario con las etiquetas correspondientes de los datos {sujeto: {sesión: etiquetas}}.
+        features (dict): Características extraídas previamente, si ya se extrajeron.
+
+    Retorna:
+        overlap_scores_table (list): Lista de listas que contiene los puntajes de solapamiento por característica y sujeto.
+                                     Cada lista interna tiene la forma [sujeto, score_feature_0, score_feature_1, ...].
+        overall_overlap_score (float): Puntaje de solapamiento general del dataset.
+    """
+
+    # Calcular el solapamiento entre clases
+    overlap_scores_per_subject, overall_overlap_score = calculate_class_overlap(features, eeg_labels)
+    
+    # Organizar los datos en un formato adecuado para mostrarlos como una tabla en HTML
+    overlap_scores_table = []
+    for subject, scores in overlap_scores_per_subject.items():
+        overlap_scores_table.append([subject] + [scores[feature] for feature in sorted(scores.keys())])
+
+    return overlap_scores_table, overall_overlap_score

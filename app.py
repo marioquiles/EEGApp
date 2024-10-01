@@ -2,8 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash, jso
 import os
 import numpy as np
 from werkzeug.utils import secure_filename
-from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics
-import time  # Para simular el tiempo de procesamiento
+from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics, process_eeg_features, process_class_overlap
 from threading import Thread  # Importar Thread para procesamiento en segundo plano
 import pickle
 
@@ -97,9 +96,31 @@ def get_parameters(filename):
                 processing_status[filename] = 'Step 4: Calculating class imbalance...'
                 imbalance_results = process_labels_metrics(eeg_labels)
 
+                base_filename, _ = os.path.splitext(filename)
+                feature_filepath = f"features/{base_filename}_features.pkl"
+
+                # Verificar si ya existen las características extraídas
+                if os.path.exists(feature_filepath):
+                    print(f"Características encontradas en {feature_filepath}. Cargando...")
+                    with open(feature_filepath, 'rb') as f:
+                        features = pickle.load(f)
+                else:
+                    # Extraer y guardar las características
+                    processing_status[filename] = 'Step 5: Extracting features'
+                    feature_filepath = process_eeg_features(eeg_data, filename, sampling_frequency, window_size, overlap)
+
+                    # Cargar las características después de extraerlas
+                    with open(feature_filepath, 'rb') as f:
+                        features = pickle.load(f)
                 
+                # Procesar el solapamiento de clases
+                processing_status[filename] = 'Step 6: Calculating class overlap...'
+                overlap_scores_table, overall_overlap_score = process_class_overlap(eeg_labels, features)
+
+
                 # Combinar todos los resultados
-                results = {**session_results, **length_results, **outlier_results, **imbalance_results}
+                results = {**session_results, **length_results, **outlier_results, **imbalance_results, 'overlap_scores_table': overlap_scores_table,
+                    'overall_overlap_score': overall_overlap_score}
 
                 # Guardar los resultados en el diccionario de estado usando una nueva clave
                 processing_status[f'{filename}_results'] = results

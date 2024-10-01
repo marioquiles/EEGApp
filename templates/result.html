@@ -216,13 +216,46 @@
                 </div>
             </div>
 
+        <!-- Análisis de Solapamiento de Clases -->
+        <div class="section">
+            <h3>Class Overlap Analysis:</h3>
+            <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
+            </button>
+
+            <div class="details-container" id="overlap-details-container">
+                <h3>Class Overlap Score per Subject and Feature:</h3>
+
+                <table border="1">
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        {% for feature_index in range(results.overlap_scores_table[0] | length - 1) %}
+                          <th>Feature {{ feature_index }}</th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in results.overlap_scores_table %}
+                        <tr>
+                          <td>{{ row[0] }}</td>
+                          {% for score in row[1:] %}
+                            <td>{{ '%.4f' | format(score) }}</td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+            </div>
+        </div>
         <!-- Puntaje Final del Dataset -->
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score) / 4 }}</p>        </div>
+            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score) / 5 }}</p>
+        </div>
 
-        <a href="/"><i class="fas fa-arrow-left"></i> Upload another file</a>
-    </div>
 
     <script>
         function toggleDetails(containerId) {
