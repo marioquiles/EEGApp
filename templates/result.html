@@ -115,6 +115,36 @@
         a:hover {
             color: #21618c;
         }
+        /* Estilos para ajustar la tabla */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        td, th {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -227,27 +257,40 @@
 
             <div class="details-container" id="overlap-details-container">
                 <h3>Class Overlap Score per Subject and Feature:</h3>
-
-                <table border="1">
-                    <thead>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead class="thead-dark">
                       <tr>
                         <th>Subject</th>
-                        {% for feature_index in range(results.overlap_scores_table[0] | length - 1) %}
+                        <!-- Iteramos sobre el número de características -->
+                        {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
                           <th>Feature {{ feature_index }}</th>
                         {% endfor %}
                       </tr>
                     </thead>
                     <tbody>
+                      <!-- Iteramos sobre los sujetos -->
                       {% for row in results.overlap_scores_table %}
                         <tr>
-                          <td>{{ row[0] }}</td>
+                          <td><strong>{{ row[0] }}</strong></td>
+                          <!-- Iteramos sobre las puntuaciones por característica -->
                           {% for score in row[1:] %}
-                            <td>{{ '%.4f' | format(score) }}</td>
+                            <td>{{ '%.2f' | format((1 - score) * 100) }}</td> <!-- Convertimos a porcentaje -->
                           {% endfor %}
                         </tr>
                       {% endfor %}
+                      <!-- Fila de promedios -->
+                      <tr class="table-info">
+                        <td><strong>Average</strong></td>
+                        {% if results.overlap_feature_avg %}
+                            {% for feature_avg in results.overlap_feature_avg %}
+                                <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
+                            {% endfor %}
+                        {% else %}
+                            <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                        {% endif %}
+                    </tr>
                     </tbody>
-                  </table>
+                </table>
             </div>
         </div>
         <!-- Puntaje Final del Dataset -->

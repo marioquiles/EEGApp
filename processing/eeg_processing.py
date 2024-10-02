@@ -138,12 +138,22 @@ def process_class_overlap(eeg_labels, features=None):
         overall_overlap_score (float): Puntaje de solapamiento general del dataset.
     """
 
-    # Calcular el solapamiento entre clases
     overlap_scores_per_subject, overall_overlap_score = calculate_class_overlap(features, eeg_labels)
-    
-    # Organizar los datos en un formato adecuado para mostrarlos como una tabla en HTML
+
+    # Limitar los scores entre 0 y 1
+    for subject, scores in overlap_scores_per_subject.items():
+        overlap_scores_per_subject[subject] = {feature: max(0, min(1, score)) for feature, score in scores.items()}
+
+    overall_overlap_score = max(0, min(1, overall_overlap_score))
+    overall_overlap_score = (1 - overall_overlap_score) * 100
+
     overlap_scores_table = []
     for subject, scores in overlap_scores_per_subject.items():
         overlap_scores_table.append([subject] + [scores[feature] for feature in sorted(scores.keys())])
 
-    return overlap_scores_table, overall_overlap_score
+    overlap_feature_avg = [
+    np.mean([subject_scores[feature] for subject_scores in overlap_scores_per_subject.values()])
+    for feature in range(len(next(iter(overlap_scores_per_subject.values()))))
+    ]
+
+    return overlap_scores_table, overall_overlap_score, overlap_feature_avg

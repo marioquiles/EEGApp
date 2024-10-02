@@ -115,12 +115,12 @@ def get_parameters(filename):
                 
                 # Procesar el solapamiento de clases
                 processing_status[filename] = 'Step 6: Calculating class overlap...'
-                overlap_scores_table, overall_overlap_score = process_class_overlap(eeg_labels, features)
+                overlap_scores_table, overall_overlap_score, overlap_feature_avg = process_class_overlap(eeg_labels, features)
 
 
                 # Combinar todos los resultados
                 results = {**session_results, **length_results, **outlier_results, **imbalance_results, 'overlap_scores_table': overlap_scores_table,
-                    'overall_overlap_score': overall_overlap_score}
+                    'overall_overlap_score': overall_overlap_score, "overlap_feature_avg": overlap_feature_avg}
 
                 # Guardar los resultados en el diccionario de estado usando una nueva clave
                 processing_status[f'{filename}_results'] = results

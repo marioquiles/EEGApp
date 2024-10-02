@@ -28,15 +28,8 @@ def calculate_class_overlap(features, labels):
         all_features = np.concatenate(all_features, axis=1)  # Concatenar por el eje de ventanas
         all_labels = np.array(all_labels)
 
-        # Debugging prints
-        print(f"Procesando el sujeto: {subject}")
-        print(f"  Tamaño de all_features: {all_features.shape}")
-        print(f"  Tamaño de all_labels: {all_labels.shape}")
-        print(f"  all_labels: {all_labels}")
-
         # Obtener las clases únicas y comprobar si hay al menos dos clases
         unique_classes = np.unique(all_labels)
-        print(f"  Etiquetas únicas: {unique_classes}")
 
         if len(unique_classes) < 2:
             print(f"  Advertencia: No hay suficientes clases para calcular el solapamiento.")
@@ -44,7 +37,6 @@ def calculate_class_overlap(features, labels):
 
         # Obtener todas las combinaciones posibles de pares de clases
         class_pairs = list(combinations(unique_classes, 2))
-        print(f"  Pares de clases: {class_pairs}")
 
         # Inicializar diccionario para almacenar los coeficientes para cada característica
         subject_overlap_scores = {feature: [] for feature in range(all_features.shape[-1])}
@@ -57,9 +49,6 @@ def calculate_class_overlap(features, labels):
 
             class_a_features = all_features[:, mask_class_a, :]
             class_b_features = all_features[:, mask_class_b, :]
-
-            print(f"  Clase A ({class_a}): {class_a_features.shape}")
-            print(f"  Clase B ({class_b}): {class_b_features.shape}")
 
             if class_a_features.size == 0 or class_b_features.size == 0:
                 # Si una clase no tiene suficientes ejemplos, no se puede calcular el coeficiente
