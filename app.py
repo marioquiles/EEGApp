@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash, jso
 import os
 import numpy as np
 from werkzeug.utils import secure_filename
-from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics, process_eeg_features, process_class_overlap
+from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics, process_eeg_features, process_class_overlap, calculate_mutual_information
 from threading import Thread  # Importar Thread para procesamiento en segundo plano
 import pickle
 
@@ -117,10 +117,14 @@ def get_parameters(filename):
                 processing_status[filename] = 'Step 6: Calculating class overlap...'
                 overlap_scores_table, overall_overlap_score, overlap_feature_avg = process_class_overlap(eeg_labels, features)
 
+                # Procesar el solapamiento de clases
+                processing_status[filename] = 'Step 6: Calculating mutual information...'
+                mi_scores_table, mi_overlap_score, mi_feature_avg = calculate_mutual_information(features, eeg_labels)
 
                 # Combinar todos los resultados
                 results = {**session_results, **length_results, **outlier_results, **imbalance_results, 'overlap_scores_table': overlap_scores_table,
-                    'overall_overlap_score': overall_overlap_score, "overlap_feature_avg": overlap_feature_avg}
+                    'overall_overlap_score': overall_overlap_score, "overlap_feature_avg": overlap_feature_avg, 'mi_scores_table': mi_scores_table,
+                    'overall_mi_score': mi_overlap_score, 'mi_feature_avg': mi_feature_avg}
 
                 # Guardar los resultados en el diccionario de estado usando una nueva clave
                 processing_status[f'{filename}_results'] = results

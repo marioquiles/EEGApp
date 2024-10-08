@@ -293,12 +293,60 @@
                 </table>
             </div>
         </div>
-        <!-- Puntaje Final del Dataset -->
-        <div class="final-score">
-            <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score) / 5 }}</p>
+
+
+        <!-- Análisis de Información Mutua (MI) -->
+        <div class="section">
+            <h3>Mutual Information (MI) Analysis:</h3>
+            <p>Overall Mutual Information Score: {{ results.overall_mi_score }}</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('mi-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide MI Details
+            </button>
+
+            <div class="details-container" id="mi-details-container">
+                <h3>Mutual Information Score per Subject:</h3>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Subject</th>
+                            <!-- Iteramos sobre el número de características -->
+                            {% for feature_index in range(1, results.mi_scores_table[0] | length) %}
+                            <th>Feature {{ feature_index }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Iteramos sobre los sujetos -->
+                        {% for row in results.mi_scores_table %}
+                            <tr>
+                                <td><strong>{{ row[0] }}</strong></td>
+                                <!-- Iteramos sobre las puntuaciones por característica -->
+                                {% for score in row[1:] %}
+                                    <td>{{ '%.2f' | format(score) }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        <!-- Fila de promedios -->
+                        <tr class="table-info">
+                            <td><strong>Average</strong></td>
+                            {% if results.mi_feature_avg %}
+                                {% for feature_avg in results.mi_feature_avg %}
+                                    <td><strong>{{ '%.2f' | format(feature_avg) }}</strong></td>
+                                {% endfor %}
+                            {% else %}
+                                <td colspan="{{ results.mi_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                            {% endif %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
+        <div class="final-score">
+            <h3>Final Score for Dataset:</h3>
+            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_mi_score) / 6 }}</p>
+        </div>
 
     <script>
         function toggleDetails(containerId) {

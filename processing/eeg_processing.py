@@ -5,6 +5,7 @@ from processing.calculate_labels import calculate_class_imbalance_score
 from .calculate_outliers import calculate_outliers, calculate_outlier_score
 from processing.extract_emotional_features import extract_emotional_features
 from processing.calculate_overlap import calculate_class_overlap
+from processing.mutual_information import calculate_mutual_information
 import numpy as np
 import os
 import pickle
@@ -157,3 +158,40 @@ def process_class_overlap(eeg_labels, features=None):
     ]
 
     return overlap_scores_table, overall_overlap_score, overlap_feature_avg
+
+
+def process_mutual_information(eeg_labels, features=None):
+    """
+    Procesa la Información Mutua (MI) entre las características y las etiquetas EEG.
+
+    Parámetros:
+        eeg_labels (dict): Diccionario con las etiquetas correspondientes de los datos {sujeto: {sesión: etiquetas}}.
+        features (dict): Características extraídas previamente, si ya se extrajeron.
+
+    Retorna:
+        mi_scores_table (list): Lista de listas que contiene los puntajes MI por característica y sujeto.
+                                Cada lista interna tiene la forma [sujeto, score_feature_0, score_feature_1, ...].
+        overall_mi_score (float): Puntaje de MI general del dataset.
+    """
+
+    # Llamar a la función que calcula MI por sujeto y obtener los puntajes
+    mi_scores_per_subject, overall_mi_score = calculate_mutual_information(features, eeg_labels)
+
+    # Limitar los scores entre 0 y 1
+    for subject, score in mi_scores_per_subject.items():
+        mi_scores_per_subject[subject] = max(0, min(1, score))
+
+    overall_mi_score = max(0, min(1, overall_mi_score))
+    overall_mi_score = overall_mi_score * 100
+
+    # Crear la tabla de puntajes de MI
+    mi_scores_table = []
+    for subject, score in mi_scores_per_subject.items():
+        mi_scores_table.append([subject, score])
+
+    # Calcular el promedio de MI para cada característica
+    mi_feature_avg = [
+        np.mean([subject_scores for subject_scores in mi_scores_per_subject.values()])
+    ]
+
+    return mi_scores_table, overall_mi_score, mi_feature_avg
