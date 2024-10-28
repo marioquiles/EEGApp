@@ -7,6 +7,7 @@ from processing.extract_emotional_features import extract_emotional_features
 from processing.calculate_overlap import calculate_class_overlap
 from processing.mutual_information import calculate_mutual_information
 from processing.calculate_noise import calculate_snr, calculate_filtering_efficiency
+from processing.calculate_variability_subjects import compute_homogeneity_scores
 import numpy as np
 import os
 import pickle
@@ -244,3 +245,20 @@ def calculate_noise(all_eeg_data, fs):
         noise_results['overall_filtering_efficiency'] = total_filtering_efficiency / num_sessions
     
     return noise_results
+
+def process_homogeneity_and_variation(eeg_features):
+    """
+    Punto de entrada para calcular puntajes de homogeneidad y variación para cada característica EEG.
+    
+    Parámetros:
+        eeg_features (dict): Diccionario con las características EEG extraídas por sujeto y sesión.
+                             {sujeto: {sesión: (num_canales, num_ventanas, num_features)}}
+    
+    Retorna:
+        results (dict): Diccionario que contiene:
+                        - homogeneity_scores: Puntaje de homogeneidad (0-100) por característica.
+                        - subject_variations: Variación por sujeto (0-100), indicando cuánto se desvía cada sujeto
+                                              en comparación con el promedio del grupo.
+    """
+    return compute_homogeneity_scores(eeg_features)
+

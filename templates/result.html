@@ -245,9 +245,34 @@
             </div>
         </div>
 
+
+        <!-- Mostrar el puntaje general de homogeneidad -->
+        <div class="section">
+            <h3>Overall Homogeneity Score:</h3>
+            <p>{{ results.overall_homogeneity_score | round(2) }}</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('homogeneity-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Homogeneity Details
+            </button>
+
+            <div class="details-container" id="homogeneity-details-container">
+                <h3>Subject Variation Scores:</h3>
+                <ul class="scores-list">
+                    {% for subject, score in results.subject_variations.items() %}
+                        <li>Subject {{ subject }}: {{ score | round(2) }}</li>
+                    {% endfor %}
+                </ul>
+
+                <div class="chart-container">
+                    <canvas id="subjectVariationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score ) / 6 }}</p>
+            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_homogeneity_score + results.overall_mi_score) / 7 }}</p>
         </div>
 
     <script>
@@ -490,6 +515,49 @@
                 }
             }
         );
-    </script>
+
+
+       // Datos de los sujetos y sus puntuaciones de variación
+       const labels = [
+        {% for subject in results.subject_variations.keys() %}
+            "{{ subject }}",
+        {% endfor %}
+    ];
+
+    const data = [
+        {% for score in results.subject_variations.values() %}
+            {{ score | round(2) }},
+        {% endfor %}
+    ];
+
+    // Configuración del gráfico
+    const ctx = document.getElementById('subjectVariationChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Subject Variation Scores',
+                data: data,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Variation Score (0-100)'
+                    }
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>
