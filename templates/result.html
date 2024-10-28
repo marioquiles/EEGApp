@@ -7,147 +7,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
-            color: #444;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 40px;
-        }
-        .container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 1200px;
-            text-align: center;
-            box-sizing: border-box;
-            transition: all 0.3s ease-in-out;
-        }
-        .container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-        }
-        h1, h2 {
-            color: #2b3a67;
-        }
-        h3 {
-            color: #394867;
-            font-size: 1.3em;
-            margin-bottom: 10px;
-        }
-        .section {
-            margin-top: 40px;
-            padding: 20px;
-            border-top: 1px solid #ccc;
-            background-color: #ffffff;
-            border-radius: 10px;
-        }
-        .toggle-btn {
-            margin-top: 20px;
-            padding: 10px 25px;
-            background-color: #3498db;
-            color: #fff;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 1em;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .toggle-btn:hover {
-            background-color: #2980b9;
-        }
-        .toggle-btn i {
-            margin-right: 8px;
-        }
-        .details-container {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            background: #f9fbfc;
-            display: none;
-            transition: all 0.3s ease;
-        }
-        .scores-list {
-            margin-top: 20px;
-            column-count: 2;
-            column-gap: 20px;
-            list-style: none;
-            padding: 0;
-            font-size: 1.1em;
-        }
-        .scores-list li {
-            padding: 8px 0;
-        }
-        .chart-container {
-            margin-top: 30px;
-            width: 100%;
-        }
-        canvas {
-            width: 100% !important;
-            height: auto !important;
-        }
-        .final-score {
-            margin-top: 50px;
-            font-size: 1.5em;
-            background-color: #dff0d8;
-            color: #3c763d;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        a {
-            display: inline-block;
-            margin-top: 30px;
-            color: #3498db;
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.3s ease;
-        }
-        a:hover {
-            color: #21618c;
-        }
-        /* Estilos para ajustar la tabla */
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0 auto;
-            table-layout: fixed;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        tr:hover {
-            background-color: #ddd;
-        }
-        td, th {
-            white-space: nowrap;
-        }
-    </style>
 </head>
+
 <body>
+
+    <ul class="navigation">
+        <li><a href="{{ url_for('rubrics_view') }}">Rubric Form</a></li>
+        <li>Puntuación de las rúbricas: {{ rubric_score }}</li>
+    </ul>
+
+    
     <div class="container">
         <h1>EEG Analysis Results <i class="fas fa-brain"></i></h1>
         <h2>File: {{ filename }}</h2>
@@ -245,8 +114,42 @@
                     <canvas id="imbalanceScoreChart"></canvas>
                 </div>
             </div>
+        </div>
 
-        <!-- Análisis de Solapamiento de Clases -->
+        <!-- Dimensión 5: Análisis de Ruido (SNR y Eficiencia de Filtrado) -->
+        <div class="section">
+            <h3>Noise Analysis (SNR and Filtering Efficiency):</h3>
+            <p>Overall SNR for Dataset: {{ results.overall_snr | round(2) }} dB</p>
+            <p>Overall Filtering Efficiency for Dataset: {{ results.overall_filtering_efficiency | round(2)}}%</p>
+
+            <button class="toggle-btn" onclick="toggleDetails('noise-details-container')">
+                <i class="fas fa-info-circle"></i> Show/Hide Noise Details
+            </button>
+
+            <div class="details-container" id="noise-details-container">
+                <!-- SNR por sujeto -->
+                <h3>SNR per Subject:</h3>
+                <ul class="scores-list">
+                {% for score in results.snr_per_subject %}
+                    <li>Subject {{ loop.index }}: {{ score | round(2) }} dB</li>
+                {% endfor %}
+                </ul>
+
+                <!-- Eficiencia de Filtrado por sujeto -->
+                <h3>Filtering Efficiency per Subject:</h3>
+                <ul class="scores-list">
+                {% for efficiency in results.filter_efficiency_per_subject %}
+                    <li>Subject {{ loop.index }}: {{ efficiency | round(2) }}%</li>
+                {% endfor %}
+                </ul>
+
+                <div class="chart-container">
+                    <canvas id="noiseChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dimensión 6: Análisis de Solapamiento de Clases -->
         <div class="section">
             <h3>Class Overlap Analysis:</h3>
             <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
@@ -259,41 +162,40 @@
                 <h3>Class Overlap Score per Subject and Feature:</h3>
                 <table class="table table-bordered table-striped table-hover">
                     <thead class="thead-dark">
-                      <tr>
-                        <th>Subject</th>
-                        <!-- Iteramos sobre el número de características -->
-                        {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
-                          <th>Feature {{ feature_index }}</th>
-                        {% endfor %}
-                      </tr>
+                        <tr>
+                            <th>Subject</th>
+                            <!-- Iteramos sobre el número de características -->
+                            {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
+                                <th>Feature {{ feature_index }}</th>
+                            {% endfor %}
+                        </tr>
                     </thead>
                     <tbody>
-                      <!-- Iteramos sobre los sujetos -->
-                      {% for row in results.overlap_scores_table %}
-                        <tr>
-                          <td><strong>{{ row[0] }}</strong></td>
-                          <!-- Iteramos sobre las puntuaciones por característica -->
-                          {% for score in row[1:] %}
-                            <td>{{ '%.2f' | format((1 - score) * 100) }}</td> <!-- Convertimos a porcentaje -->
-                          {% endfor %}
+                        <!-- Iteramos sobre los sujetos -->
+                        {% for row in results.overlap_scores_table %}
+                            <tr>
+                                <td><strong>{{ row[0] }}</strong></td>
+                                <!-- Iteramos sobre las puntuaciones por característica -->
+                                {% for score in row[1:] %}
+                                    <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        <!-- Fila de promedios -->
+                        <tr class="table-info">
+                            <td><strong>Average</strong></td>
+                            {% if results.overlap_feature_avg %}
+                                {% for feature_avg in results.overlap_feature_avg %}
+                                    <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
+                                {% endfor %}
+                            {% else %}
+                                <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                            {% endif %}
                         </tr>
-                      {% endfor %}
-                      <!-- Fila de promedios -->
-                      <tr class="table-info">
-                        <td><strong>Average</strong></td>
-                        {% if results.overlap_feature_avg %}
-                            {% for feature_avg in results.overlap_feature_avg %}
-                                <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
-                            {% endfor %}
-                        {% else %}
-                            <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
-                        {% endif %}
-                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
 
         <!-- Análisis de Información Mutua (MI) -->
         <div class="section">
@@ -312,7 +214,7 @@
                             <th>Subject</th>
                             <!-- Iteramos sobre el número de características -->
                             {% for feature_index in range(1, results.mi_scores_table[0] | length) %}
-                            <th>Feature {{ feature_index }}</th>
+                                <th>Feature {{ feature_index }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -345,7 +247,7 @@
 
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_mi_score) / 6 }}</p>
+            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score ) / 6 }}</p>
         </div>
 
     <script>
@@ -480,6 +382,65 @@
                             title: {
                                 display: true,
                                 text: 'Percentage of Outlier Windows'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Gráfico de SNR y Eficiencia de Filtrado por Sujeto
+        const noiseLabels = [
+            {% for i in range(1, results.snr_per_subject | length + 1) %}
+                "Subject {{ i }}",
+            {% endfor %}
+        ];
+
+        const snrData = [
+            {% for score in results.snr_per_subject %}
+                {{ score }},
+            {% endfor %}
+        ];
+
+        const efficiencyData = [
+            {% for efficiency in results.filter_efficiency_per_subject %}
+                {{ efficiency }},
+            {% endfor %}
+        ];
+
+        new Chart(
+            document.getElementById('noiseChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: noiseLabels,
+                    datasets: [
+                        {
+                            label: 'SNR (dB) per Subject',
+                            data: snrData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Filtering Efficiency (%) per Subject',
+                            data: efficiencyData,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Value'
                             }
                         }
                     }

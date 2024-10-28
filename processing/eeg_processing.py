@@ -6,6 +6,7 @@ from .calculate_outliers import calculate_outliers, calculate_outlier_score
 from processing.extract_emotional_features import extract_emotional_features
 from processing.calculate_overlap import calculate_class_overlap
 from processing.mutual_information import calculate_mutual_information
+from processing.calculate_noise import calculate_snr, calculate_filtering_efficiency
 import numpy as np
 import os
 import pickle
@@ -195,3 +196,51 @@ def process_mutual_information(eeg_labels, features=None):
     ]
 
     return mi_scores_table, overall_mi_score, mi_feature_avg
+
+
+def calculate_noise(all_eeg_data, fs):
+    """
+    Procesa los datos de EEG para calcular el SNR y la eficiencia de filtrado por sujeto.
+    Devuelve los resultados en el formato esperado por la plantilla HTML.
+    """
+    noise_results = {
+        'snr_per_subject': [],
+        'filter_efficiency_per_subject': [],
+        'overall_snr': 0,
+        'overall_filtering_efficiency': 0
+    }
+
+    total_snr = 0
+    total_filtering_efficiency = 0
+    num_sessions = 0
+
+    # Iterar sobre todos los sujetos
+    for subject_id, sessions in all_eeg_data.items():
+        subject_snr = []
+        subject_filter_efficiency = []
+
+        # Iterar sobre todas las sesiones de cada sujeto
+        for session_id, eeg_data in sessions.items():
+            # Calcular el SNR
+            snr_value = calculate_snr(eeg_data, fs)
+            subject_snr.append(snr_value)
+
+            # Calcular la eficiencia de filtrado
+            filter_efficiency_value = calculate_filtering_efficiency(eeg_data, fs)
+            subject_filter_efficiency.append(filter_efficiency_value)
+
+            # Sumar al total para calcular los promedios generales
+            total_snr += snr_value
+            total_filtering_efficiency += filter_efficiency_value
+            num_sessions += 1
+        
+        # Guardar los resultados por sujeto
+        noise_results['snr_per_subject'].append(sum(subject_snr) / len(subject_snr))
+        noise_results['filter_efficiency_per_subject'].append(sum(subject_filter_efficiency) / len(subject_filter_efficiency))
+    
+    # Calcular los promedios generales
+    if num_sessions > 0:
+        noise_results['overall_snr'] = total_snr / num_sessions
+        noise_results['overall_filtering_efficiency'] = total_filtering_efficiency / num_sessions
+    
+    return noise_results

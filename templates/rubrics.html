@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubrics Evaluation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Rubrics Evaluation</h1>
+
+        <form action="{{ url_for('rubrics_view') }}" method="POST">
+            <!-- Rúbrica 1: Metadata Evaluation -->
+            <h3>Metadata Evaluation</h3>
+            <label for="metadata_subject_info">Subject information (age, sex, health status, etc.):</label>
+            <input type="number" step="0.1" id="metadata_subject_info" name="metadata_subject_info" max="0.5">
+            <br>
+            <label for="metadata_electrode_config">Electrode configuration (location, type, etc.):</label>
+            <input type="number" step="0.1" id="metadata_electrode_config" name="metadata_electrode_config" max="1">
+            <br>
+            <label for="metadata_experimental_conditions">Experimental conditions (task performed, environment, etc.):</label>
+            <input type="number" step="0.1" id="metadata_experimental_conditions" name="metadata_experimental_conditions" max="1">
+            <br>
+            <label for="metadata_recording_procedure">Recording procedure (duration, equipment settings, etc.):</label>
+            <input type="number" step="0.1" id="metadata_recording_procedure" name="metadata_recording_procedure" max="1">
+            <br>
+            <label for="metadata_consistency">Consistency and coherence of information:</label>
+            <input type="number" step="0.1" id="metadata_consistency" name="metadata_consistency" max="1.5">
+            <br>
+
+            <!-- Rúbrica 2: Format Validation -->
+            <h3>Format Validation</h3>
+            <label for="format_data_format">Data format (e.g. microvolts for EEG):</label>
+            <input type="number" step="0.1" id="format_data_format" name="format_data_format" max="1.5">
+            <br>
+            <label for="format_standardization">Format standardization (e.g. EDF, CSV):</label>
+            <input type="number" step="0.1" id="format_standardization" name="format_standardization" max="1.5">
+            <br>
+            <label for="format_conversion">Ease of converting the format (if not standardized):</label>
+            <input type="number" step="0.1" id="format_conversion" name="format_conversion" max="1">
+            <br>
+            <label for="format_accessibility">Accessibility in common analysis tools (e.g. MNE, EEGLAB):</label>
+            <input type="number" step="0.1" id="format_accessibility" name="format_accessibility" max="1">
+            <br>
+
+            <!-- Rúbrica 3: Data Accessibility -->
+            <h3>Data Accessibility</h3>
+            <label for="data_compatibility">Compatibility with analysis software (e.g. MNE, EEGLAB):</label>
+            <input type="number" step="0.1" id="data_compatibility" name="data_compatibility" max="1.5">
+            <br>
+            <label for="data_import_libraries">Import libraries available (e.g. Python, MATLAB):</label>
+            <input type="number" step="0.1" id="data_import_libraries" name="data_import_libraries" max="1.5">
+            <br>
+            <label for="data_loading_ease">Ease of data loading (scripts available):</label>
+            <input type="number" step="0.1" id="data_loading_ease" name="data_loading_ease" max="1">
+            <br>
+            <label for="data_documentation">Documentation and examples available:</label>
+            <input type="number" step="0.1" id="data_documentation" name="data_documentation" max="1">
+            <br>
+
+            <!-- Rúbrica 4: Relevance Evaluation -->
+            <h3>Evaluation of Relevance and Relevance</h3>
+            <label for="relevance_objectives">Relevance to study objectives:</label>
+            <input type="number" step="0.1" id="relevance_objectives" name="relevance_objectives" max="1.5">
+            <br>
+            <label for="relevance_clinical_coverage">Coverage of necessary clinical conditions:</label>
+            <input type="number" step="0.1" id="relevance_clinical_coverage" name="relevance_clinical_coverage" max="1.5">
+            <br>
+            <label for="relevance_data_specificity">Level of detail and specificity of the data:</label>
+            <input type="number" step="0.1" id="relevance_data_specificity" name="relevance_data_specificity" max="1">
+            <br>
+            <label for="relevance_diversity">Diversity and representativeness of subjects:</label>
+            <input type="number" step="0.1" id="relevance_diversity" name="relevance_diversity" max="1">
+            <br>
+
+            <!-- Botón para enviar el formulario -->
+            <button type="submit">Submit Rubric Scores</button>
+        </form>
+    </div>
+</body>
+</html>

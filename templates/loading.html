@@ -64,12 +64,22 @@
 
                 if (data.status === 'Uploading complete. Processing started.') {
                     $('#progress-bar').val(10);
-                } else if (data.status === 'Step 1: Calculating session scores...') {
+                } else if (data.status === 'Step 1: Calculating session metrics...') {
+                    $('#progress-bar').val(20);
+                } else if (data.status === 'Step 2: Calculating length metrics...') {
+                    $('#progress-bar').val(30);
+                } else if (data.status === 'Step 3: Calculating window outliers...') {
+                    $('#progress-bar').val(40);
+                } else if (data.status === 'Step 5: Calculating noise metrics (SNR and filtering efficiency)...') {
                     $('#progress-bar').val(50);
-                } else if (data.status === 'Step 2: Generating results...') {
+                } else if (data.status === 'Step 6: Calculating class imbalance...') {
+                    $('#progress-bar').val(60);
+                } else if (data.status === 'Step 7: Calculating class overlap...') {
+                    $('#progress-bar').val(70);
+                } else if (data.status === 'Step 8: Calculating mutual information...') {
                     $('#progress-bar').val(80);
                 } else if (data.status === 'Completed') {
-                    $('#progress-bar').val(100);
+                    $('#progress-bar').val(90);
                     setTimeout(function() {
                         window.location.href = "/results/{{ filename }}"; // Redirige a la página de resultados
                     }, 1000);

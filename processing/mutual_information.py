@@ -19,16 +19,13 @@ def calculate_mutual_information(features, eeg_labels):
    # Llamar a la función que calcula MI por sujeto y obtener los puntajes
     mi_scores_per_subject = {}
     for subject, sessions in features.items():
-        print(f"Procesando sujeto: {subject}")
         all_features = []
         all_labels = []
 
         # Concatenar las características y etiquetas de todas las sesiones para cada sujeto
         for session, feature_data in sessions.items():
-            print(f"  Procesando sesión: {session}")
-            print(f"  Dimensiones de feature_data: {feature_data.shape}")
+
             etiqueta = eeg_labels[subject][session]  # Obtener la etiqueta para la sesión actual
-            print(f"  Etiqueta para la sesión: {etiqueta}")
 
             # Reducir la dimensión de los canales tomando la media para cada feature
             feature_data_mean = np.mean(feature_data, axis=0)  # Dimensión resultante: (n_ventanas, n_features)
@@ -39,18 +36,12 @@ def calculate_mutual_information(features, eeg_labels):
 
         all_features = np.concatenate(all_features, axis=0)  # Concatenar por el eje de ventanas
         all_labels = np.array(all_labels)
-
-        print(f"Dimensiones de all_features después de concatenar: {all_features.shape}")
-        print(f"Dimensiones de all_labels después de convertir a array: {all_labels.shape}")
-
         # Asegurarse de que las etiquetas sean 1D
         all_labels = all_labels.ravel()
-        print(f"Dimensiones de all_labels después de ravel: {all_labels.shape}")
 
         # Calcular la Información Mutua para cada característica
         subject_mi_scores = []
         for feature_index in range(all_features.shape[1]):
-            print(f"  Calculando MI para la característica {feature_index}")
             feature_data = all_features[:, feature_index]
             mi_score = mutual_info_score(all_labels, feature_data)
             subject_mi_scores.append(mi_score)
