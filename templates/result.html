@@ -11,11 +11,20 @@
 
 <body>
 
-    <ul class="navigation">
-        <li><a href="{{ url_for('rubrics_view') }}">Rubric Form</a></li>
-        <li>Puntuación de las rúbricas: {{ rubric_score }}</li>
-    </ul>
-
+    <header class="navbar">
+        <div class="navbar-content">
+            <h1 class="navbar-title">NeuroView</h1>
+            <ul class="navbar-links">
+                <li class="rubric-item">
+                    <a href="{{ url_for('rubrics_view') }}">Rubric Form</a>
+                    <span class="rubric-score">Puntuación de las rúbricas: {{ rubric_score }}</span>
+                </li>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Reports</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </div>
+    </header>
     
     <div class="container">
         <h1>EEG Analysis Results <i class="fas fa-brain"></i></h1>
@@ -23,267 +32,377 @@
 
         <!-- Dimensión 1: Score de Sesiones -->
         <div class="section">
-            <h3>Overall Session Score:</h3>
-            <p>{{ results.final_score_sessions }}</p>
+            <div class="section-content">
+                <h3>Overall Session Score:</h3>
+                <p>{{ results.final_score_sessions }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('session-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Session Details
+                </button>
+            </div>
 
-            <button class="toggle-btn" onclick="toggleDetails('session-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Session Details
-            </button>
+            <div class="chart-container">
+                <canvas id="sessionScoreChart"></canvas>
+            </div>
 
-            <div class="details-container" id="session-details-container">
+            <!-- Contenedor de detalles con ID único -->
+            <div class="full-width-scores details-container" id="session-details-container" style="display: none;">
                 <h3>Number of Subjects: {{ results.num_sujetos }}</h3>
                 <h3>Expected Sessions: {{ results.sessions_expected }}</h3>
-
                 <h3>Session Completion Scores per Subject:</h3>
                 <ul class="scores-list">
-                {% for score in results.session_scores %}
-                    <li>Subject {{ loop.index }}: {{ score }}</li>
-                {% endfor %}
+                    {% for score in results.session_scores %}
+                        <li>Subject {{ loop.index }}: {{ score }}</li>
+                    {% endfor %}
                 </ul>
-
-                <div class="chart-container">
-                    <canvas id="sessionScoreChart"></canvas>
-                </div>
             </div>
         </div>
 
         <!-- Dimensión 2: Score de Longitud de Sesiones -->
         <div class="section">
-            <h3>Overall Length Score for Dataset:</h3>
-            <p>{{ results.overall_score_length }}</p>
+            <div class="section-content">
+                <h3>Overall Length Score for Dataset:</h3>
+                <p>{{ results.overall_score_length }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('length-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Length Details
+                </button>
+            </div>
 
-            <button class="toggle-btn" onclick="toggleDetails('length-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Length Details
-            </button>
+            <div class="chart-container">
+                <canvas id="lengthScoreChart"></canvas>
+            </div>
 
-            <div class="details-container" id="length-details-container">
+            <!-- Contenedor de detalles con ID único -->
+            <div class="full-width-scores details-container" id="length-details-container" style="display: none;">
                 <h3>Length of Sessions Score per Channel:</h3>
                 <ul class="scores-list">
-                {% for score in results.scores_per_channel %}
-                    <li>Subject {{ loop.index }}: {{ score }}</li>
-                {% endfor %}
+                    {% for score in results.scores_per_channel %}
+                        <li>Channel {{ loop.index }}: {{ score }}</li>
+                    {% endfor %}
                 </ul>
-
-                <div class="chart-container">
-                    <canvas id="lengthScoreChart"></canvas>
-                </div>
             </div>
         </div>
 
         <!-- Dimensión 3: Análisis de Outliers -->
         <div class="section">
-            <h3>Outlier Analysis:</h3>
-            <p>Overall Outlier Windows Score: {{ results.final_outlier_score }}</p>
+            <div class="section-content">
+                <h3>Outlier Analysis:</h3>
+                <p>Overall Outlier Windows Score: {{ results.final_outlier_score }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('outlier-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Outlier Details
+                </button>
+            </div>
 
-            <button class="toggle-btn" onclick="toggleDetails('outlier-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Outlier Details
-            </button>
+            <div class="chart-container">
+                <canvas id="outlierPercentageChart"></canvas>
+            </div>
 
-            <div class="details-container" id="outlier-details-container">
+            <!-- Contenedor de detalles con ID único -->
+            <div class="full-width-scores details-container" id="outlier-details-container" style="display: none;">
                 <h3>Percentage of Windows with Outliers per Subject:</h3>
                 <ul class="scores-list">
-                {% for subject, percentage in results.outlier_percentages.items() %}
-                    <li>Subject {{ loop.index }}: {{ '%.2f'|format(percentage) }}%</li>
-                {% endfor %}
+                    {% for subject, percentage in results.outlier_percentages.items() %}
+                        <li>Subject {{ loop.index }}: {{ '%.2f'|format(percentage) }}%</li>
+                    {% endfor %}
                 </ul>
-
-                <div class="chart-container">
-                    <canvas id="outlierPercentageChart"></canvas>
-                </div>
             </div>
         </div>
 
         <!-- Dimensión 4: Análisis de Desbalance de Clases -->
         <div class="section">
-            <h3>Class Imbalance Analysis:</h3>
-            <p>Overall Class Imbalance Score: {{ results.total_imbalance_score }}</p>
+            <div class="section-content">
+                <h3>Class Imbalance Analysis:</h3>
+                <p>Overall Class Imbalance Score: {{ results.total_imbalance_score }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('imbalance-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Imbalance Details
+                </button>
+            </div>
 
-            <button class="toggle-btn" onclick="toggleDetails('imbalance-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Imbalance Details
-            </button>
+            <div class="chart-container">
+                <canvas id="imbalanceScoreChart"></canvas>
+            </div>
 
-            <div class="details-container" id="imbalance-details-container">
+            <!-- Contenedor de detalles con ID único -->
+            <div class="full-width-scores details-container" id="imbalance-details-container" style="display: none;">
                 <h3>Class Imbalance Score per Subject:</h3>
                 <ul class="scores-list">
-                {% for score in results.class_imbalance_scores %}
-                    <li>Subject {{ loop.index }}: {{ score }}</li>
-                {% endfor %}
+                    {% for score in results.class_imbalance_scores %}
+                        <li>Subject {{ loop.index }}: {{ score }}</li>
+                    {% endfor %}
                 </ul>
-
-                <div class="chart-container">
-                    <canvas id="imbalanceScoreChart"></canvas>
-                </div>
             </div>
         </div>
 
         <!-- Dimensión 5: Análisis de Ruido (SNR y Eficiencia de Filtrado) -->
         <div class="section">
-            <h3>Noise Analysis (SNR and Filtering Efficiency):</h3>
-            <p>Overall SNR for Dataset: {{ results.overall_snr | round(2) }} dB</p>
-            <p>Overall Filtering Efficiency for Dataset: {{ results.overall_filtering_efficiency | round(2)}}%</p>
+            <div class="section-content">
+                <h3>Noise Analysis (SNR and Filtering Efficiency):</h3>
+                <p>Overall SNR for Dataset: {{ results.overall_snr | round(2) }} dB</p>
+                <p>Overall Filtering Efficiency for Dataset: {{ results.overall_filtering_efficiency | round(2)}}%</p>
+                <button class="toggle-btn" onclick="toggleDetails('noise-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Noise Details
+                </button>
+            </div>
 
-            <button class="toggle-btn" onclick="toggleDetails('noise-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Noise Details
-            </button>
+            <div class="chart-container">
+                <canvas id="noiseChart"></canvas>
+            </div>
 
-            <div class="details-container" id="noise-details-container">
-                <!-- SNR por sujeto -->
+            <!-- Contenedor de detalles con ID único -->
+            <div class="full-width-scores details-container" id="noise-details-container" style="display: none;">
                 <h3>SNR per Subject:</h3>
                 <ul class="scores-list">
-                {% for score in results.snr_per_subject %}
-                    <li>Subject {{ loop.index }}: {{ score | round(2) }} dB</li>
-                {% endfor %}
-                </ul>
-
-                <!-- Eficiencia de Filtrado por sujeto -->
-                <h3>Filtering Efficiency per Subject:</h3>
-                <ul class="scores-list">
-                {% for efficiency in results.filter_efficiency_per_subject %}
-                    <li>Subject {{ loop.index }}: {{ efficiency | round(2) }}%</li>
-                {% endfor %}
-                </ul>
-
-                <div class="chart-container">
-                    <canvas id="noiseChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dimensión 6: Análisis de Solapamiento de Clases -->
-        <div class="section">
-            <h3>Class Overlap Analysis:</h3>
-            <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
-
-            <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
-            </button>
-
-            <div class="details-container" id="overlap-details-container">
-                <h3>Class Overlap Score per Subject and Feature:</h3>
-                <table class="table table-bordered table-striped table-hover">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Subject</th>
-                            <!-- Iteramos sobre el número de características -->
-                            {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
-                                <th>Feature {{ feature_index }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Iteramos sobre los sujetos -->
-                        {% for row in results.overlap_scores_table %}
-                            <tr>
-                                <td><strong>{{ row[0] }}</strong></td>
-                                <!-- Iteramos sobre las puntuaciones por característica -->
-                                {% for score in row[1:] %}
-                                    <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                        <!-- Fila de promedios -->
-                        <tr class="table-info">
-                            <td><strong>Average</strong></td>
-                            {% if results.overlap_feature_avg %}
-                                {% for feature_avg in results.overlap_feature_avg %}
-                                    <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
-                                {% endfor %}
-                            {% else %}
-                                <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
-                            {% endif %}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Análisis de Información Mutua (MI) -->
-        <div class="section">
-            <h3>Mutual Information (MI) Analysis:</h3>
-            <p>Overall Mutual Information Score: {{ results.overall_mi_score }}</p>
-
-            <button class="toggle-btn" onclick="toggleDetails('mi-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide MI Details
-            </button>
-
-            <div class="details-container" id="mi-details-container">
-                <h3>Mutual Information Score per Subject:</h3>
-                <table class="table table-bordered table-striped table-hover">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Subject</th>
-                            <!-- Iteramos sobre el número de características -->
-                            {% for feature_index in range(1, results.mi_scores_table[0] | length) %}
-                                <th>Feature {{ feature_index }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Iteramos sobre los sujetos -->
-                        {% for row in results.mi_scores_table %}
-                            <tr>
-                                <td><strong>{{ row[0] }}</strong></td>
-                                <!-- Iteramos sobre las puntuaciones por característica -->
-                                {% for score in row[1:] %}
-                                    <td>{{ '%.2f' | format(score) }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                        <!-- Fila de promedios -->
-                        <tr class="table-info">
-                            <td><strong>Average</strong></td>
-                            {% if results.mi_feature_avg %}
-                                {% for feature_avg in results.mi_feature_avg %}
-                                    <td><strong>{{ '%.2f' | format(feature_avg) }}</strong></td>
-                                {% endfor %}
-                            {% else %}
-                                <td colspan="{{ results.mi_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
-                            {% endif %}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- Mostrar el puntaje general de homogeneidad -->
-        <div class="section">
-            <h3>Overall Homogeneity Score:</h3>
-            <p>{{ results.overall_homogeneity_score | round(2) }}</p>
-
-            <button class="toggle-btn" onclick="toggleDetails('homogeneity-details-container')">
-                <i class="fas fa-info-circle"></i> Show/Hide Homogeneity Details
-            </button>
-
-            <div class="details-container" id="homogeneity-details-container">
-                <h3>Subject Variation Scores:</h3>
-                <ul class="scores-list">
-                    {% for subject, score in results.subject_variations.items() %}
-                        <li>Subject {{ subject }}: {{ score | round(2) }}</li>
+                    {% for score in results.snr_per_subject %}
+                        <li>Subject {{ loop.index }}: {{ score | round(2) }} dB</li>
                     {% endfor %}
                 </ul>
+                <h3>Filtering Efficiency per Subject:</h3>
+                <ul class="scores-list">
+                    {% for efficiency in results.filter_efficiency_per_subject %}
+                        <li>Subject {{ loop.index }}: {{ efficiency | round(2) }}%</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
 
-                <div class="chart-container">
-                    <canvas id="subjectVariationChart"></canvas>
+        <!-- Dimensión X: Class Overlap Analysis -->
+<div class="section">
+    <!-- Title and Score Section -->
+    <div class="section-content">
+        <h3>Class Overlap Analysis:</h3>
+        <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
+        <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
+            <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
+        </button>
+    </div>
+
+    <!-- Radar Chart to the Right -->
+    <div class="chart-container radar-chart-container">
+        <canvas id="overlapRadarChart"></canvas>
+    </div>
+
+    <!-- Hidden Details Section with Table, shown when button is clicked -->
+    <div class="full-width-scores details-container" id="overlap-details-container" style="display: none;">
+        <div class="table-container">
+            <table class="table table-bordered table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Subject</th>
+                        {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
+                            <th>Feature {{ feature_index }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in results.overlap_scores_table %}
+                        <tr>
+                            <td><strong>{{ row[0] }}</strong></td>
+                            {% for score in row[1:] %}
+                                <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    <tr class="table-info">
+                        <td><strong>Average</strong></td>
+                        {% if results.overlap_feature_avg %}
+                            {% for feature_avg in results.overlap_feature_avg %}
+                                <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
+                            {% endfor %}
+                        {% else %}
+                            <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                        {% endif %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+        
+        <!-- Mutual Information (MI) Analysis -->
+        <div class="section">
+            <div class="section-content">
+                <h3>Mutual Information (MI) Analysis:</h3>
+                <p>Overall Mutual Information Score: {{ results.overall_mi_score }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('mi-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide MI Details
+                </button>
+            </div>
+
+            <!-- Radar Chart for MI Analysis -->
+            <div class="chart-container radar-chart-container">
+                <canvas id="miRadarChart"></canvas>
+            </div>
+
+            <!-- Hidden Details Section with Table -->
+            <div class="full-width-scores details-container" id="mi-details-container" style="display: none;">
+                <div class="table-container">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Subject</th>
+                                {% for feature_index in range(1, results.mi_scores_table[0] | length) %}
+                                    <th>Feature {{ feature_index }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in results.mi_scores_table %}
+                                <tr>
+                                    <td><strong>{{ row[0] }}</strong></td>
+                                    {% for score in row[1:] %}
+                                        <td>{{ '%.2f' | format(score) }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                            <tr class="table-info">
+                                <td><strong>Average</strong></td>
+                                {% if results.mi_feature_avg %}
+                                    {% for feature_avg in results.mi_feature_avg %}
+                                        <td><strong>{{ '%.2f' | format(feature_avg) }}</strong></td>
+                                    {% endfor %}
+                                {% else %}
+                                    <td colspan="{{ results.mi_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                                {% endif %}
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
 
+        <!-- Final Score -->
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
             <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_homogeneity_score + results.overall_mi_score) / 7 }}</p>
         </div>
+    </div>
 
-    <script>
-        function toggleDetails(containerId) {
-            var container = document.getElementById(containerId);
-            if (container.style.display === "none" || container.style.display === "") {
-                container.style.display = "block";
-            } else {
-                container.style.display = "none";
+        <script>
+            function toggleDetails(containerId) {
+                var container = document.getElementById(containerId);
+                if (container.style.display === "none" || container.style.display === "") {
+                    container.style.display = "block";
+                } else {
+                    container.style.display = "none";
+                }
+            }
+
+                        // Radar Chart Configuration for Class Overlap Analysis
+                        const featureLabels = [
+        {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
+            "Feature {{ feature_index }}",
+        {% endfor %}
+    ];
+
+    const radarData = {
+        labels: featureLabels,
+        datasets: [
+            {
+                label: "Overlap Score",
+                data: [
+                    {% for feature_avg in results.overlap_feature_avg %}
+                        {{ '%.2f' | format((1 - feature_avg) * 100) }},
+                    {% endfor %}
+                ],
+                fill: true,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
+            }
+        ]
+    };
+
+    const radarConfig = {
+        type: 'radar',
+        data: radarData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false // Hide the legend
+                }
+            },
+            scales: {
+                r: {
+                    angleLines: { display: true },
+                    suggestedMin: 0,
+                    suggestedMax: 100,
+                    ticks: {
+                        stepSize: 20,
+                        backdropColor: 'rgba(255, 255, 255, 0.8)' // Optional: adds readability by lightening the background
+                    }
+                }
             }
         }
+    };
+
+    // Create the Radar Chart
+    new Chart(
+        document.getElementById('overlapRadarChart'),
+        radarConfig
+    );
+
+// Radar Chart Configuration for Mutual Information (MI) Analysis
+const miFeatureLabels = [
+    {% for feature_index in range(1, results.mi_scores_table[0] | length) %}
+        "Feature {{ feature_index }}",
+    {% endfor %}
+];
+
+const miRadarData = {
+    labels: miFeatureLabels,
+    datasets: [
+        {
+            label: "MI Score",
+            data: [
+                {% for feature_avg in results.mi_feature_avg %}
+                    {{ ('%.2f' | format(feature_avg * 100)) }}, 
+                {% endfor %}
+            ],
+            fill: true,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+        }
+    ]
+};
+
+const miRadarConfig = {
+    type: 'radar',
+    data: miRadarData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false // Hide the legend
+            }
+        },
+        scales: {
+            r: {
+                angleLines: { display: true },
+                suggestedMin: 0,
+                suggestedMax: 100,
+                ticks: {
+                    stepSize: 20,
+                    backdropColor: 'rgba(255, 255, 255, 0.8)'
+                }
+            }
+        }
+    }
+};
+
+// Create the MI Radar Chart
+new Chart(
+    document.getElementById('miRadarChart'),
+    miRadarConfig
+);
 
         // Gráfico de Puntajes de Sesiones por Sujeto
         const sessionLabels = [

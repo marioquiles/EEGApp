@@ -1,164 +1,314 @@
-
+/* Configuración general */
+/* Configuración general */
 body {
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-background-color: #f0f4f8;
-color: #444;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-margin: 0;
-padding: 40px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7fc;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 40px;
 }
+
+/* Contenedor principal */
 .container {
-background: #ffffff;
-padding: 30px;
-border-radius: 15px;
-box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-width: 100%;
-max-width: 1200px;
-text-align: center;
-box-sizing: border-box;
-transition: all 0.3s ease-in-out;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1400px; /* Ajuste para aprovechar el espacio en pantallas grandes */
+    text-align: center;
+    box-sizing: border-box;
+    transition: all 0.3s ease-in-out;
+    margin-top: 100px;
 }
-.container:hover {
-transform: translateY(-5px);
-box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-}
-h1, h2 {
-color: #2b3a67;
-}
-h3 {
-color: #394867;
-font-size: 1.3em;
-margin-bottom: 10px;
-}
+
+/* Sección en dos columnas */
 .section {
-margin-top: 40px;
-padding: 20px;
-border-top: 1px solid #ccc;
-background-color: #ffffff;
-border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 25px;
+    background-color: #fafbfc;
+    border: 1px solid #e4e7ec;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    gap: 20px;
+    margin-top: 40px;
+    transition: transform 0.3s;
 }
-.toggle-btn {
-margin-top: 20px;
-padding: 10px 25px;
-background-color: #3498db;
-color: #fff;
-border: none;
-border-radius: 25px;
-cursor: pointer;
-transition: background-color 0.3s ease;
-font-size: 1em;
-box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+.section:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
-.toggle-btn:hover {
-background-color: #2980b9;
+
+/* Estilos de las columnas dentro de la sección */
+.section-content {
+    flex: 1 1 45%; /* Ocupa el 45% del ancho disponible */
+    min-width: 300px;
+    text-align: left;
 }
-.toggle-btn i {
-margin-right: 8px;
-}
-.details-container {
-margin-top: 20px;
-padding: 15px;
-border-radius: 10px;
-box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-background: #f9fbfc;
-display: none;
-transition: all 0.3s ease;
-}
-.scores-list {
-margin-top: 20px;
-column-count: 2;
-column-gap: 20px;
-list-style: none;
-padding: 0;
-font-size: 1.1em;
-}
-.scores-list li {
-padding: 8px 0;
-}
-.chart-container {
-margin-top: 30px;
-width: 100%;
-}
-canvas {
-width: 100% !important;
-height: auto !important;
-}
-.final-score {
-margin-top: 50px;
-font-size: 1.5em;
-background-color: #dff0d8;
-color: #3c763d;
-padding: 20px;
-border-radius: 10px;
-box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-a {
-display: inline-block;
-margin-top: 30px;
-color: #3498db;
-text-decoration: none;
-font-weight: bold;
-transition: color 0.3s ease;
-}
-a:hover {
-color: #21618c;
-}
-/* Estilos para ajustar la tabla */
-.table-container {
-width: 100%;
-overflow-x: auto;
-margin-top: 20px;
-}
-table {
-width: 100%;
-border-collapse: collapse;
-margin: 0 auto;
-table-layout: fixed;
-}
-th, td {
-border: 1px solid #ddd;
-padding: 8px;
-text-align: center;
-}
-th {
-background-color: #3498db;
-color: white;
-}
-tr:nth-child(even) {
-background-color: #f2f2f2;
-}
-tr:hover {
-background-color: #ddd;
-}
-td, th {
-white-space: nowrap;
-}
-.navbar {
-    background-color: #3498db;
-    padding: 15px;
+
+.chart-container, .table-container {
+    flex: 1 1 45%; /* Ocupa el otro 45% del ancho */
+    min-width: 300px;
     text-align: center;
 }
 
-.navbar ul {
+/* Botón de alternar detalles */
+.toggle-btn {
+    margin-top: 20px;
+    padding: 10px 25px;
+    background-color: #6a89cc;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1em;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.toggle-btn:hover {
+    background-color: #4a69bd;
+}
+.toggle-btn i {
+    margin-right: 8px;
+}
+
+/* Contenedor de detalles */
+.details-container {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    background: #f5f8fa;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+/* Responsividad para pantallas pequeñas */
+@media (max-width: 768px) {
+    .section {
+        flex-direction: column;
+        align-items: center;
+    }
+    .section-content, .chart-container, .table-container {
+        flex: 1 1 100%; /* Cada columna ocupa el 100% en pantallas pequeñas */
+    }
+}
+
+
+/* Contenedor de puntajes en ancho completo */
+.full-width-scores {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f5f8fa;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Ajustes de lista de puntajes para más columnas */
+.scores-list {
+    column-count: 3; /* Ajusta el número de columnas según el ancho de la pantalla */
+    column-gap: 20px;
     list-style: none;
+    padding: 0;
+    font-size: 1.1em;
+    margin: 0;
+}
+
+@media (min-width: 1200px) {
+    .scores-list {
+        column-count: 4;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .scores-list {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 767px) {
+    .scores-list {
+        column-count: 2;
+    }
+}
+
+
+.scores-list li {
+    padding: 8px 0;
+}
+
+/* Contenedor de gráficos */
+.chart-container {
+    margin-top: 30px;
+    width: 100%;
+}
+canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Puntaje final */
+.final-score {
+    margin-top: 50px;
+    font-size: 1.5em;
+    background-color: #d8f1e8;
+    color: #2b7a4b;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para enlaces */
+a {
+    display: inline-block;
+    margin-top: 30px;
+    color: #6a89cc;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+a:hover {
+    color: #4a69bd;
+}
+
+/* Tabla */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+    table-layout: fixed;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+th {
+    background-color: #6a89cc;
+    color: white;
+}
+tr:nth-child(even) {
+    background-color: #f7f9fc;
+}
+tr:hover {
+    background-color: #e2e9f0;
+}
+td, th {
+    white-space: nowrap;
+}
+
+/* Navbar mejorada con colores más discretos */
+.navbar {
+    background: linear-gradient(90deg, #b0c4de, #d3e0f0);
+    color: #333;
+    width: 100%;
+    padding: 25px 30px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.navbar-title {
+    font-size: 2em;
+    font-weight: 900;
+    color: #333;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.navbar-links {
+    list-style: none;
+    display: flex;
+    align-items: center; /* Alinea los elementos verticalmente */
+    gap: 30px;
     margin: 0;
     padding: 0;
 }
 
-.navbar ul li {
+/* Rubric Item alineado en columna */
+.rubric-item {
+    display: flex;
+    flex-direction: column; /* Coloca el enlace y la puntuación en columna */
+    align-items: center;
+    margin-right: 30px; /* Espacio entre el Rubric Item y los otros enlaces */
+}
+.rubric-item a {
+    margin-bottom: 5px; /* Espacio entre el enlace y la puntuación */
+    color: #333;
+}
+.rubric-score {
+    font-size: 0.9em;
+    color: #555;
+    font-weight: normal;
+    text-shadow: none;
+}
+
+/* Enlaces de la Navbar */
+.navbar-links li {
     display: inline;
-    margin: 0 15px;
 }
 
-.navbar ul li a {
-    color: white;
-    text-decoration: none;
+.navbar-links a {
+    color: #333;
     font-weight: bold;
+    text-decoration: none;
+    font-size: 1.1em;
+    transition: color 0.3s ease, transform 0.3s ease;
 }
 
-.navbar ul li a:hover {
-    text-decoration: underline;
+.navbar-links a:hover {
+    color: #444;
+    transform: scale(1.05);
+}
+
+/* Ajustar el contenedor para la barra de navegación fija */
+.container {
+    margin-top: 120px;
+}
+
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .navbar-content {
+        flex-direction: column;
+    }
+    .navbar-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Additional style specifically for the radar chart container */
+.radar-chart-container {
+    max-width: 400px; /* Set a smaller max width to reduce size */
+    margin: 0 auto; /* Center the radar chart */
+}
+
+/* Ensuring the canvas in the radar chart respects the container size */
+.radar-chart-container canvas {
+    width: 100% !important;
+    height: auto !important;
 }
