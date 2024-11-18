@@ -97,24 +97,41 @@
 
             <span id="error-message">Overlap must be less than the window size.</span>
 
+            <div class="form-group">
+                <label for="analysis_type" class="form-label">Analysis Type:</label>
+                <select name="analysis_type" id="analysis_type" class="form-input" required>
+                    <option value="emotions">Emotions</option>
+                    <option value="p300">P300</option>
+                </select>
+            </div>
+            
             <input type="submit" value="Submit" class="submit-btn">
         </form>
+
     </div>
 
     <script>
         document.getElementById('parameter-form').addEventListener('submit', function(event) {
             const windowSize = parseInt(document.getElementById('window_size').value);
             const overlap = parseInt(document.getElementById('overlap').value);
+            const analysisType = document.getElementById('analysis_type').value;
+            const filename = "{{ filename }}"; // Server-side variable for filename
 
+            // Update the form action URL based on selected analysis type
+            if (analysisType === 'emotions') {
+                this.action = `/get_parameters/emotions/${filename}`;
+            } else if (analysisType === 'p300') {
+                this.action = `/get_parameters/p300/${filename}`;
+            }
+
+            // Validation for overlap
             if (overlap >= windowSize) {
-                // Mostrar mensaje de error
                 document.getElementById('error-message').style.display = 'inline';
-                // Evitar el envío del formulario
                 event.preventDefault();
             }
         });
 
-        // Ocultar el mensaje de error si el valor cambia a uno válido
+        // Hide error message when input values change to valid
         document.getElementById('window_size').addEventListener('input', function() {
             document.getElementById('error-message').style.display = 'none';
         });

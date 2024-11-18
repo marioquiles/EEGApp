@@ -106,7 +106,7 @@
                 </ul>
             </div>
         </div>
-
+        
         <!-- Dimensión 4: Análisis de Desbalance de Clases -->
         <div class="section">
             <div class="section-content">
@@ -165,57 +165,57 @@
         </div>
 
         <!-- Dimensión X: Class Overlap Analysis -->
-<div class="section">
-    <!-- Title and Score Section -->
-    <div class="section-content">
-        <h3>Class Overlap Analysis:</h3>
-        <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
-        <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
-            <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
-        </button>
-    </div>
+        <div class="section">
+            <!-- Title and Score Section -->
+            <div class="section-content">
+                <h3>Class Overlap Analysis:</h3>
+                <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
+                </button>
+            </div>
 
-    <!-- Radar Chart to the Right -->
-    <div class="chart-container radar-chart-container">
-        <canvas id="overlapRadarChart"></canvas>
-    </div>
+            <!-- Radar Chart to the Right -->
+            <div class="chart-container radar-chart-container">
+                <canvas id="overlapRadarChart"></canvas>
+            </div>
 
-    <!-- Hidden Details Section with Table, shown when button is clicked -->
-    <div class="full-width-scores details-container" id="overlap-details-container" style="display: none;">
-        <div class="table-container">
-            <table class="table table-bordered table-striped table-hover">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Subject</th>
-                        {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
-                            <th>Feature {{ feature_index }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in results.overlap_scores_table %}
-                        <tr>
-                            <td><strong>{{ row[0] }}</strong></td>
-                            {% for score in row[1:] %}
-                                <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
+            <!-- Hidden Details Section with Table, shown when button is clicked -->
+            <div class="full-width-scores details-container" id="overlap-details-container" style="display: none;">
+                <div class="table-container">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Subject</th>
+                                {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
+                                    <th>Feature {{ feature_index }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in results.overlap_scores_table %}
+                                <tr>
+                                    <td><strong>{{ row[0] }}</strong></td>
+                                    {% for score in row[1:] %}
+                                        <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
+                                    {% endfor %}
+                                </tr>
                             {% endfor %}
-                        </tr>
-                    {% endfor %}
-                    <tr class="table-info">
-                        <td><strong>Average</strong></td>
-                        {% if results.overlap_feature_avg %}
-                            {% for feature_avg in results.overlap_feature_avg %}
-                                <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
-                            {% endfor %}
-                        {% else %}
-                            <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
-                        {% endif %}
-                    </tr>
-                </tbody>
-            </table>
+                            <tr class="table-info">
+                                <td><strong>Average</strong></td>
+                                {% if results.overlap_feature_avg %}
+                                    {% for feature_avg in results.overlap_feature_avg %}
+                                        <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
+                                    {% endfor %}
+                                {% else %}
+                                    <td colspan="{{ results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                                {% endif %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
         
         <!-- Mutual Information (MI) Analysis -->
@@ -270,12 +270,51 @@
             </div>
         </div>
 
+        <div class="section">
+            <div class="section-content">
+                <h3>Homogeneity and Variation Analysis:</h3>
+                <p>Overall Homogeneity Score: {{ results.overall_homogeneity_score | round(2) }}</p>
+                <button class="toggle-btn" onclick="toggleDetails('homogeneity-variation-details-container')">
+                    <i class="fas fa-info-circle"></i> Show/Hide Details
+                </button>
+            </div>
+        
+            <!-- Gráfico de Homogeneidad por Característica -->
+            <div class="chart-container">
+                <h4>Homogeneity Scores by Feature</h4>
+                <canvas id="homogeneityChart"></canvas>
+            </div>
+        
+            <!-- Gráfico de Variación por Sujeto -->
+            <div class="chart-container">
+                <h4>Subject Variation Scores</h4>
+                <canvas id="variationChart"></canvas>
+            </div>
+        
+            <!-- Detalles -->
+            <div class="full-width-scores details-container" id="homogeneity-variation-details-container" style="display: none;">
+                <h3>Homogeneity Scores per Feature:</h3>
+                <ul class="scores-list">
+                    {% for feature, score in results.homogeneity_scores.items() %}
+                        <li>Feature {{ feature }}: {{ score | round(2) }}</li>
+                    {% endfor %}
+                </ul>
+                <h3>Variation Scores per Subject:</h3>
+                <ul class="scores-list">
+                    {% for subject, score in results.subject_variations.items() %}
+                        <li>Subject {{ subject }}: {{ score | round(2) }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
 
         <!-- Final Score -->
         <div class="final-score">
             <h3>Final Score for Dataset:</h3>
             <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_homogeneity_score + results.overall_mi_score) / 7 }}</p>
         </div>
+        
     </div>
 
         <script>
@@ -289,11 +328,101 @@
             }
 
                         // Radar Chart Configuration for Class Overlap Analysis
-                        const featureLabels = [
+        const featureLabels = [
         {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
             "Feature {{ feature_index }}",
         {% endfor %}
     ];
+
+
+// Datos para el gráfico de homogeneidad por característica
+const homogeneityLabels = [
+    {% for feature in results.homogeneity_scores.keys() %}
+        "Feature {{ feature }}",
+    {% endfor %}
+];
+
+const homogeneityData = [
+    {% for score in results.homogeneity_scores.values() %}
+        {{ score | round(2) }},
+    {% endfor %}
+];
+
+// Datos para el gráfico de variación por sujeto
+const variationLabels = [
+    {% for subject in results.subject_variations.keys() %}
+        "{{ subject }}",
+    {% endfor %}
+];
+
+const variationData = [
+    {% for score in results.subject_variations.values() %}
+        {{ score | round(2) }},
+    {% endfor %}
+];
+
+// Configuración del gráfico de homogeneidad
+const ctxHomogeneity = document.getElementById('homogeneityChart').getContext('2d');
+new Chart(ctxHomogeneity, {
+    type: 'bar',
+    data: {
+        labels: homogeneityLabels,
+        datasets: [
+            {
+                label: 'Homogeneity Scores',
+                data: homogeneityData,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: 'Score (0-100)'
+                }
+            }
+        }
+    }
+});
+
+// Configuración del gráfico de variación
+const ctxVariation = document.getElementById('variationChart').getContext('2d');
+new Chart(ctxVariation, {
+    type: 'bar',
+    data: {
+        labels: variationLabels,
+        datasets: [
+            {
+                label: 'Subject Variation Scores',
+                data: variationData,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: 'Score (0-100)'
+                }
+            }
+        }
+    }
+});
+
 
     const radarData = {
         labels: featureLabels,

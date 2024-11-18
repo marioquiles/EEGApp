@@ -2,12 +2,13 @@ from processing.calculate_sessions import calculate_sessions_expected, calculate
 from processing.input_validation import validate_window_size
 from processing.calculate_length_scores import calculate_length_scores
 from processing.calculate_labels import calculate_class_imbalance_score
-from .calculate_outliers import calculate_outliers, calculate_outlier_score
+from .calculate_outliers import calculate_outliers, calculate_P300outliers
 from processing.extract_emotional_features import extract_emotional_features
-from processing.calculate_overlap import calculate_class_overlap
-from processing.mutual_information import calculate_mutual_information
+from processing.calculate_overlap import calculate_class_overlap, calculate_p300_class_overlap
+from processing.mutual_information import calculate_mutual_information, calculate_p300_mutual_information
 from processing.calculate_noise import calculate_snr, calculate_filtering_efficiency
-from processing.calculate_variability_subjects import compute_homogeneity_scores
+from processing.calculate_variability_subjects import compute_homogeneity_scores, calculate_p300_homogeneity
+from processing.extract_p300_features import extract_p300_features
 import numpy as np
 import os
 import pickle
@@ -55,28 +56,30 @@ def process_length_metrics(eeg_data):
 
     return results
 
-def process_outlier_metrics(eeg_data, window_size, overlap):
-    try:
-        # Calcular el porcentaje de ventanas con outliers usando la función calculate_outliers
-        outlier_percentages = calculate_outliers(eeg_data, window_size, overlap)
+def process_outlier_metrics(eeg_data, window_size, overlap, processingType):
+        try:
+            if (processingType == "emotion"):
+                outlier_percentages = calculate_outliers(eeg_data, window_size, overlap)
+            else:
+                outlier_percentages = calculate_P300outliers(eeg_data)
 
-        # Calcular la puntuación final para los outliers
-        mean_outlier_percentage = np.mean(list(outlier_percentages.values()))
-        final_outlier_score = max(0, 100 - mean_outlier_percentage)
-        final_outlier_score = round(final_outlier_score, 2)
+            # Calcular la puntuación final para los outliers
+            mean_outlier_percentage = np.mean(list(outlier_percentages.values()))
+            final_outlier_score = max(0, 100 - mean_outlier_percentage)
+            final_outlier_score = round(final_outlier_score, 2)
 
-        # Preparar el resultado final
-        result = {
-            'outlier_percentages': outlier_percentages,
-            'final_outlier_score': final_outlier_score
-        }
+            # Preparar el resultado final
+            result = {
+                'outlier_percentages': outlier_percentages,
+                'final_outlier_score': final_outlier_score
+            }
 
-        print(result)  # Agregar esto para verificar el contenido del resultado
-        return result
+            return result
 
-    except Exception as e:
-        print(f"Error en process_outlier_metrics: {e}")
-        return {'error': str(e)}
+        except Exception as e:
+            print(f"Error en process_outlier_metrics: {e}")
+            return {'error': str(e)}
+    
 
 
 def process_labels_metrics(eeg_labels):
@@ -98,7 +101,7 @@ def process_labels_metrics(eeg_labels):
     }
 
 # Función para procesar y guardar características
-def process_eeg_features(eeg_data, filename, sampling_rate=128, window_size=256, overlap=128, output_folder="features/"):
+def process_eeg_features(eeg_data, processingType, filename, sampling_rate=128, window_size=256, overlap=128, output_folder="features/"):
     """
     Extrae las características emocionales de los datos EEG y las guarda en un archivo.
 
@@ -113,7 +116,10 @@ def process_eeg_features(eeg_data, filename, sampling_rate=128, window_size=256,
         feature_filepath (str): Ruta al archivo donde se han guardado las características.
     """
     # Extraer características usando la función extract_emotional_features
-    features = extract_emotional_features(eeg_data, sampling_rate, window_size, overlap)
+    if(processingType == "emotions"):
+        features = extract_emotional_features(eeg_data, sampling_rate, window_size, overlap)
+    else:
+        features = extract_p300_features(eeg_data, sampling_rate)
 
     # Crear la carpeta de salida si no existe
     if not os.path.exists(output_folder):
@@ -127,21 +133,27 @@ def process_eeg_features(eeg_data, filename, sampling_rate=128, window_size=256,
     print(f"Características extraídas y guardadas en {feature_filepath}")
     return feature_filepath
 
-def process_class_overlap(eeg_labels, features=None):
+def process_class_overlap(eeg_labels, analysis_type, features=None):
     """
     Procesa el solapamiento entre clases usando las características extraídas.
-
+    
     Parámetros:
         eeg_labels (dict): Diccionario con las etiquetas correspondientes de los datos {sujeto: {sesión: etiquetas}}.
+        analysis_type (str): Tipo de análisis, puede ser "emotion" o "p300".
         features (dict): Características extraídas previamente, si ya se extrajeron.
 
     Retorna:
         overlap_scores_table (list): Lista de listas que contiene los puntajes de solapamiento por característica y sujeto.
                                      Cada lista interna tiene la forma [sujeto, score_feature_0, score_feature_1, ...].
         overall_overlap_score (float): Puntaje de solapamiento general del dataset.
+        overlap_feature_avg (list): Lista con los promedios de solapamiento por característica.
     """
-
-    overlap_scores_per_subject, overall_overlap_score = calculate_class_overlap(features, eeg_labels)
+    if analysis_type == "emotion":
+        overlap_scores_per_subject, overall_overlap_score = calculate_class_overlap(features, eeg_labels)
+    elif analysis_type == "p300":
+        overlap_scores_per_subject, overall_overlap_score = calculate_p300_class_overlap(features, eeg_labels)
+    else:
+        raise ValueError(f"Analysis type '{analysis_type}' is not supported.")
 
     # Limitar los scores entre 0 y 1
     for subject, scores in overlap_scores_per_subject.items():
@@ -155,55 +167,38 @@ def process_class_overlap(eeg_labels, features=None):
         overlap_scores_table.append([subject] + [scores[feature] for feature in sorted(scores.keys())])
 
     overlap_feature_avg = [
-    np.mean([subject_scores[feature] for subject_scores in overlap_scores_per_subject.values()])
-    for feature in range(len(next(iter(overlap_scores_per_subject.values()))))
+        np.mean([subject_scores[feature] for subject_scores in overlap_scores_per_subject.values()])
+        for feature in range(len(next(iter(overlap_scores_per_subject.values()))))
     ]
 
     return overlap_scores_table, overall_overlap_score, overlap_feature_avg
 
 
-def process_mutual_information(eeg_labels, features=None):
-    """
-    Procesa la Información Mutua (MI) entre las características y las etiquetas EEG.
-
-    Parámetros:
-        eeg_labels (dict): Diccionario con las etiquetas correspondientes de los datos {sujeto: {sesión: etiquetas}}.
-        features (dict): Características extraídas previamente, si ya se extrajeron.
-
-    Retorna:
-        mi_scores_table (list): Lista de listas que contiene los puntajes MI por característica y sujeto.
-                                Cada lista interna tiene la forma [sujeto, score_feature_0, score_feature_1, ...].
-        overall_mi_score (float): Puntaje de MI general del dataset.
-    """
-
-    # Llamar a la función que calcula MI por sujeto y obtener los puntajes
-    mi_scores_per_subject, overall_mi_score = calculate_mutual_information(features, eeg_labels)
+def process_mutual_information(eeg_labels, features=None, analysis_type="emotion"):
+  
+    if analysis_type == "p300":
+        # Usar la función específica para P300
+        mi_scores_table, overall_mi_score, mi_feature_avg = calculate_p300_mutual_information(features, eeg_labels)
+    else:
+        # Usar la función general
+        mi_scores_table, overall_mi_score, mi_feature_avg = calculate_mutual_information(features, eeg_labels)
 
     # Limitar los scores entre 0 y 1
-    for subject, score in mi_scores_per_subject.items():
-        mi_scores_per_subject[subject] = max(0, min(1, score))
+    for row in mi_scores_table:
+        for i in range(1, len(row)):  # Limitar cada puntaje de característica
+            row[i] = max(0, min(1, row[i]))
 
     overall_mi_score = max(0, min(1, overall_mi_score))
-    overall_mi_score = overall_mi_score * 100
+    overall_mi_score = overall_mi_score * 100  # Escalar al rango [0, 100]
 
-    # Crear la tabla de puntajes de MI
-    mi_scores_table = []
-    for subject, score in mi_scores_per_subject.items():
-        mi_scores_table.append([subject, score])
-
-    # Calcular el promedio de MI para cada característica
-    mi_feature_avg = [
-        np.mean([subject_scores for subject_scores in mi_scores_per_subject.values()])
-    ]
+    # Truncar los promedios de MI a dos decimales
+    mi_feature_avg = [round(avg, 2) for avg in mi_feature_avg]
 
     return mi_scores_table, overall_mi_score, mi_feature_avg
 
 
-def calculate_noise(all_eeg_data, fs):
-    """
-    Procesa los datos de EEG para calcular el SNR y la eficiencia de filtrado por sujeto.
-    Devuelve los resultados en el formato esperado por la plantilla HTML.
-    """
+def calculate_noise(all_eeg_data, fs, dataType = "emotion"):
+
     noise_results = {
         'snr_per_subject': [],
         'filter_efficiency_per_subject': [],
@@ -223,6 +218,10 @@ def calculate_noise(all_eeg_data, fs):
         # Iterar sobre todas las sesiones de cada sujeto
         for session_id, eeg_data in sessions.items():
             # Calcular el SNR
+
+            if (dataType == "p300"):
+                eeg_data = eeg_data.reshape(eeg_data.shape[0], -1)
+
             snr_value = calculate_snr(eeg_data, fs)
             subject_snr.append(snr_value)
 
@@ -246,19 +245,25 @@ def calculate_noise(all_eeg_data, fs):
     
     return noise_results
 
-def process_homogeneity_and_variation(eeg_features):
+
+
+
+
+def process_homogeneity_and_variation(eeg_features, analysis_type="emotion"):
     """
-    Punto de entrada para calcular puntajes de homogeneidad y variación para cada característica EEG.
-    
+    Calcula puntajes de homogeneidad y variación para diferentes tipos de datos EEG.
+
     Parámetros:
-        eeg_features (dict): Diccionario con las características EEG extraídas por sujeto y sesión.
-                             {sujeto: {sesión: (num_canales, num_ventanas, num_features)}}
-    
+        eeg_features (dict): Características EEG extraídas por sujeto y sesión.
+        analysis_type (str): Tipo de análisis ("general" o "p300").
+
     Retorna:
         results (dict): Diccionario que contiene:
-                        - homogeneity_scores: Puntaje de homogeneidad (0-100) por característica.
-                        - subject_variations: Variación por sujeto (0-100), indicando cuánto se desvía cada sujeto
-                                              en comparación con el promedio del grupo.
+                        - overall_homogeneity_score: Puntaje único de homogeneidad para el dataset.
+                        - homogeneity_scores: Puntajes de homogeneidad por característica.
+                        - subject_variations: Variaciones por sujeto.
     """
-    return compute_homogeneity_scores(eeg_features)
-
+    if analysis_type == "p300":
+        return calculate_p300_homogeneity(eeg_features)
+    else:
+        return compute_homogeneity_scores(eeg_features)

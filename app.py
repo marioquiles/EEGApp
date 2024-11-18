@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash, jso
 import os
 import numpy as np
 from werkzeug.utils import secure_filename
-from processing.eeg_processing import process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics, process_eeg_features, process_class_overlap, calculate_mutual_information, calculate_noise, process_homogeneity_and_variation
+from processing.eeg_processing import process_mutual_information, process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics, process_eeg_features, process_class_overlap, calculate_mutual_information, calculate_noise, process_homogeneity_and_variation
 from threading import Thread  # Importar Thread para procesamiento en segundo plano
 import pickle
 
@@ -13,6 +13,7 @@ app.config['SECRET_KEY'] = 'tu_clave_secreta'
 ALLOWED_EXTENSIONS = {'pkl'}
 processing_status = {}  # Diccionario para mantener el estado del procesamiento por archivo
 file_data = {}  # Diccionario para almacenar datos de archivos subidos (frecuencia, etc.)
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -57,7 +58,7 @@ def upload_file():
             return redirect(request.url)
 
 
-@app.route('/get_parameters/<filename>', methods=['GET', 'POST'])
+@app.route('/get_parameters/emotions/<filename>', methods=['GET', 'POST'])
 def get_parameters(filename):
     if request.method == 'POST':
         sampling_frequency = float(request.form['sampling_frequency'])
@@ -91,7 +92,7 @@ def get_parameters(filename):
 
                 # Procesar la nueva dimensión de outliers
                 processing_status[filename] = 'Step 3: Calculating window outliers...'
-                outlier_results = process_outlier_metrics(eeg_data, window_size, overlap)
+                outlier_results = process_outlier_metrics(eeg_data, window_size, overlap, "emotion")
                
                # Paso 5: Calcular el ruido (SNR y eficiencia de filtrado)
                 processing_status[filename] = 'Step 5: Calculating noise metrics (SNR and filtering efficiency)...'
@@ -100,7 +101,6 @@ def get_parameters(filename):
                 # Paso 4: Calcular el desbalance de clases
                 processing_status[filename] = 'Step 6: Calculating class imbalance...'
                 imbalance_results = process_labels_metrics(eeg_labels)
-
 
                 base_filename, _ = os.path.splitext(filename)
                 feature_filepath = f"features/{base_filename}_features.pkl"
@@ -113,7 +113,7 @@ def get_parameters(filename):
                 else:
                     # Extraer y guardar las características
                     processing_status[filename] = 'Step 5: Extracting features'
-                    feature_filepath = process_eeg_features(eeg_data, filename, sampling_frequency, window_size, overlap)
+                    feature_filepath = process_eeg_features(eeg_data, "emotions", filename, sampling_frequency, window_size, overlap)
 
                     # Cargar las características después de extraerlas
                     with open(feature_filepath, 'rb') as f:
@@ -121,15 +121,15 @@ def get_parameters(filename):
                 
                 # Procesar el solapamiento de clases
                 processing_status[filename] = 'Step 7: Calculating class overlap...'
-                overlap_scores_table, overall_overlap_score, overlap_feature_avg = process_class_overlap(eeg_labels, features)
+                overlap_scores_table, overall_overlap_score, overlap_feature_avg = process_class_overlap(eeg_labels, "emotion", features)
 
                 # Procesar el solapamiento de clases
                 processing_status[filename] = 'Step 8: Calculating mutual information...'
-                mi_scores_table, mi_overlap_score, mi_feature_avg = calculate_mutual_information(features, eeg_labels)
+                mi_scores_table, mi_overlap_score, mi_feature_avg = process_mutual_information(eeg_labels , features, "emotion")
 
                 # Paso 10: Calcular homogeneidad y variación por sujeto
                 processing_status[filename] = 'Step 10: Calculating homogeneity and subject variation...'
-                homogeneity_results = process_homogeneity_and_variation(features)
+                homogeneity_results = process_homogeneity_and_variation(features, "emotion")
 
                 # Combinar todos los resultados
                 results = {**session_results, **length_results, **outlier_results, **imbalance_results, **noise_results, 
@@ -155,6 +155,114 @@ def get_parameters(filename):
         
 
     return render_template('parameters.html', filename=filename)
+
+
+@app.route('/get_parameters/p300/<filename>', methods=['GET', 'POST'])
+def get_p300_parameters(filename):
+    if request.method == 'POST':
+        # Retrieve form parameters
+        sampling_frequency = float(request.form['sampling_frequency'])
+        window_size = int(request.form['window_size'])
+        overlap = float(request.form['overlap'])
+        session["filename"] = filename
+        
+        # Validate that overlap is less than window size
+        if overlap >= window_size:
+            flash('Overlap must be less than the window size.')
+            return redirect(request.url)
+        
+        # Define the P300-specific data processing function
+        def process_p300_data(filepath, filename, sampling_frequency, window_size, overlap):
+            try:
+                # Load the EEG data
+                with open(filepath, 'rb') as file:
+                    data = pickle.load(file)
+                
+                # Extract EEG data and labels
+                eeg_data = data['eeg_data']
+                eeg_labels = data['eeg_labels']
+                
+
+                # Step 1: Calculate session metrics (if applicable to P300)
+                processing_status[filename] = 'Step 1: Calculating session metrics...'
+                session_results = process_session_metrics(eeg_data)
+
+                # Step 2: Calculate length metrics
+                processing_status[filename] = 'Step 2: Calculating length metrics...'
+                length_results = process_length_metrics(eeg_data)
+
+                processing_status[filename] = 'Step 3: Calculating window outliers...'
+                outlier_results = process_outlier_metrics(eeg_data, window_size, overlap, "p300")
+
+                processing_status[filename] = 'Step 5: Calculating noise metrics (SNR and filtering efficiency)...'
+                noise_results = calculate_noise(eeg_data, sampling_frequency, "p300")  
+
+                processing_status[filename] = 'Step 6: Calculating class imbalance...'
+                imbalance_results = process_labels_metrics(eeg_labels)
+
+                base_filename, _ = os.path.splitext(filename)
+                feature_filepath = f"features/{base_filename}_features.pkl"
+
+                # Verificar si ya existen las características extraídas
+                if os.path.exists(feature_filepath):
+                    print(f"Características encontradas en {feature_filepath}. Cargando...")
+                    with open(feature_filepath, 'rb') as f:
+                        features = pickle.load(f)
+                else:
+                    # Extraer y guardar las características
+                    processing_status[filename] = 'Step 5: Extracting features'
+                    feature_filepath = process_eeg_features(eeg_data, "p300", filename, sampling_frequency, window_size, overlap)
+
+                    # Cargar las características después de extraerlas
+                    with open(feature_filepath, 'rb') as f:
+                        features = pickle.load(f)
+            
+
+                processing_status[filename] = 'Step 7: Calculating class overlap...'
+                overlap_scores_table, overall_overlap_score, overlap_feature_avg = process_class_overlap(eeg_labels, "p300", features)
+
+                processing_status[filename] = 'Step 8: Calculating mutual information...'
+                mi_scores_table, mi_overlap_score, mi_feature_avg = process_mutual_information( eeg_labels , features, "p300")
+                
+                processing_status[filename] = 'Step 10: Calculating homogeneity and subject variation...'
+                homogeneity_results = process_homogeneity_and_variation(features, "emotion")
+
+                # Combine all results
+                results = {
+                    **session_results,
+                    **length_results,
+                    **outlier_results,
+                    **noise_results,
+                    **imbalance_results,
+                    "overall_homogeneity_score": 0,
+                    "overall_overlap_score": overall_overlap_score,            # Puntaje general de solapamiento de clases
+                    "overlap_scores_table": overlap_scores_table,            # Tabla de puntajes de solapamiento por característica y sujeto
+                    "overlap_feature_avg": overlap_feature_avg,             # Promedio de solapamiento por característica
+                    "overall_mi_score": mi_overlap_score,                 # Puntaje general de información mutua
+                    "mi_scores_table": mi_scores_table,                 # Tabla de puntajes de información mutua
+                    "mi_feature_avg": mi_feature_avg,                  # Promedio de MI por característica
+                    **homogeneity_results
+                }
+
+                # Save results in the processing status dictionary
+                processing_status[f'{filename}_results'] = results
+                processing_status[filename] = 'Completed'
+            
+            except Exception as e:
+                processing_status[filename] = f'Error: {str(e)}'
+        
+        # Start processing in a new thread
+        filepath = file_data.get(filename)
+        if filepath:
+            thread = Thread(target=process_p300_data, args=(filepath, filename, sampling_frequency, window_size, overlap))
+            thread.start()
+            return redirect(url_for('processing_status_view', filename=filename))
+        else:
+            return "File not found", 404
+
+    return render_template('parameters.html', filename=filename)
+
+
 
 
 @app.route('/results/<filename>')

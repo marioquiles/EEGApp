@@ -6,7 +6,8 @@ def calculate_class_imbalance_score(labels):
     Calcula el puntaje de desbalance de clases por sujeto y la puntuación general.
 
     Parámetros:
-        labels (dict): Diccionario de etiquetas de cada sujeto, con sesiones y sus respectivas etiquetas (puede haber más de dos clases).
+        labels (dict): Diccionario de etiquetas de cada sujeto, con sesiones y sus respectivas etiquetas.
+                       En el caso de P300, cada sesión puede tener múltiples etiquetas (listas o arrays).
 
     Retorna:
         imbalance_scores (list): Lista de puntajes de desbalance de clases por sujeto.
@@ -16,10 +17,11 @@ def calculate_class_imbalance_score(labels):
 
     # Iterar sobre cada sujeto para calcular el puntaje de desbalance de clases
     for subject_id, sessions in labels.items():
-        # Concatenar las etiquetas de todas las sesiones para el sujeto actual
+        # Concatenar todas las etiquetas de cada sesión del sujeto actual
         subject_labels = []
-        for session_id, label in sessions.items():
-            subject_labels.append(label)
+        for session_id, session_labels in sessions.items():
+            # Asegurarse de que session_labels sea una lista o array de etiquetas
+            subject_labels.extend(session_labels if isinstance(session_labels, (list, np.ndarray)) else [session_labels])
 
         subject_labels = np.array(subject_labels)
 
@@ -38,6 +40,6 @@ def calculate_class_imbalance_score(labels):
             imbalance_scores.append(round(imbalance_score, 2))
 
     # Calcular el puntaje general de desbalance de clases como la media de los puntajes por sujeto
-    total_imbalance_score = round(np.mean(imbalance_scores), 2)
+    total_imbalance_score = round(np.mean(imbalance_scores), 2) if imbalance_scores else 0.0
 
     return imbalance_scores, total_imbalance_score
