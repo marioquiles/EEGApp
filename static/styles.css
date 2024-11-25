@@ -19,7 +19,7 @@ body {
     border-radius: 15px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 1400px; /* Ajuste para aprovechar el espacio en pantallas grandes */
+    max-width: 100%; /* Ajuste para aprovechar el espacio en pantallas grandes */
     text-align: center;
     box-sizing: border-box;
     transition: all 0.3s ease-in-out;
@@ -48,10 +48,10 @@ body {
 
 /* Estilos de las columnas dentro de la sección */
 .section-content {
-    flex: 1 1 45%; /* Ocupa el 45% del ancho disponible */
-    min-width: 300px;
-    text-align: left;
+    flex: 1 1 48%; /* Ocupa el 48% para dejar un pequeño margen entre columnas */
+    min-width: 400px; /* Ancho mínimo para evitar que colapsen en pantallas pequeñas */
 }
+
 
 .chart-container, .table-container {
     flex: 1 1 45%; /* Ocupa el otro 45% del ancho */
@@ -312,3 +312,5 @@ td, th {
     width: 100% !important;
     height: auto !important;
 }
+
+

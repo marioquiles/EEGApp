@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Analysis Parameters - Comparison</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .parameter-form {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+        }
+        .dataset-section {
+            margin-bottom: 30px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: left;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2b3a67;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        #error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .submit-btn {
+            padding: 15px 30px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            font-size: 1.2em;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #2980b9;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="parameter-form">
+        <h1>Set Analysis Parameters for Comparison</h1>
+        <form id="comparison-form" method="POST">
+            <!-- Dataset 1 Parameters -->
+            <div class="dataset-section">
+                <h2>Dataset 1: {{ file1 }}</h2>
+                <div class="form-group">
+                    <label for="sampling_frequency1" class="form-label">Sampling Frequency:</label>
+                    <input type="number" step="any" name="sampling_frequency1" id="sampling_frequency1" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="window_size1" class="form-label">Window Size:</label>
+                    <input type="number" name="window_size1" id="window_size1" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="overlap1" class="form-label">Overlap (0 to Window Size):</label>
+                    <input type="number" name="overlap1" id="overlap1" class="form-input" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="analysis_type1" class="form-label">Analysis Type:</label>
+                    <select name="analysis_type1" id="analysis_type1" class="form-input" required>
+                        <option value="emotions">Emotions</option>
+                        <option value="p300">P300</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dataset 2 Parameters -->
+            <div class="dataset-section">
+                <h2>Dataset 2: {{ file2 }}</h2>
+                <div class="form-group">
+                    <label for="sampling_frequency2" class="form-label">Sampling Frequency:</label>
+                    <input type="number" step="any" name="sampling_frequency2" id="sampling_frequency2" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="window_size2" class="form-label">Window Size:</label>
+                    <input type="number" name="window_size2" id="window_size2" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="overlap2" class="form-label">Overlap (0 to Window Size):</label>
+                    <input type="number" name="overlap2" id="overlap2" class="form-input" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="analysis_type2" class="form-label">Analysis Type:</label>
+                    <select name="analysis_type2" id="analysis_type2" class="form-input" required>
+                        <option value="emotions">Emotions</option>
+                        <option value="p300">P300</option>
+                    </select>
+                </div>
+            </div>
+
+            <span id="error-message">Overlap must be less than the window size for both datasets.</span>
+            <input type="submit" value="Submit Parameters" class="submit-btn">
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('comparison-form').addEventListener('submit', function(event) {
+            const windowSize1 = parseInt(document.getElementById('window_size1').value);
+            const overlap1 = parseInt(document.getElementById('overlap1').value);
+            const windowSize2 = parseInt(document.getElementById('window_size2').value);
+            const overlap2 = parseInt(document.getElementById('overlap2').value);
+
+            // Validation for overlaps
+            if (overlap1 >= windowSize1 || overlap2 >= windowSize2) {
+                document.getElementById('error-message').style.display = 'inline';
+                event.preventDefault();
+            }
+        });
+
+        // Hide error message when input values change to valid
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('input', () => {
+                document.getElementById('error-message').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

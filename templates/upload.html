@@ -23,7 +23,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
             transition: all 0.3s ease-in-out;
         }
@@ -66,72 +66,62 @@
             background-color: #2980b9;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
-        .progress-container {
-            width: 100%;
-            background-color: #f3f3f3;
-            border-radius: 10px;
+        .file-group {
+            margin-bottom: 15px;
+        }
+        .comparison-section {
             margin-top: 20px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: none;
         }
-        progress {
-            width: 100%;
-            height: 20px;
-            border: none;
-            transition: width 0.3s ease;
-        }
-        #progress-text {
-            margin-top: 10px;
-            font-size: 1.1em;
-            color: #2b3a67;
+        .comparison-active .comparison-section {
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Upload EEG Data</h1>
-        <p>Upload your EEG data file in <strong>.pkl</strong> format to start the analysis.</p>
+        <p>Select whether to upload one or two datasets and proceed with the upload.</p>
         <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" id="file-input" accept=".pkl" required>
-            <br>
-            <input type="submit" value="Upload File and Process">
-            <div class="progress-container">
-                <progress id="progress-bar" value="0" max="100"></progress>
+            <!-- Single/Comparison selection -->
+            <div class="file-group">
+                <label>
+                    <input type="checkbox" id="compare_datasets" name="compare_datasets">
+                    Compare Two Datasets
+                </label>
             </div>
-            <span id="progress-text">0%</span>
+
+            <!-- File input for Dataset 1 -->
+            <div class="file-group">
+                <label for="file1">Dataset 1:</label>
+                <input type="file" name="file1" id="file1" accept=".pkl" required>
+            </div>
+
+            <!-- File input for Dataset 2 (hidden by default) -->
+            <div id="comparison-section" class="comparison-section">
+                <div class="file-group">
+                    <label for="file2">Dataset 2:</label>
+                    <input type="file" name="file2" id="file2" accept=".pkl">
+                </div>
+            </div>
+
+            <input type="submit" value="Upload File(s)">
         </form>
     </div>
 
     <script>
-        document.getElementById('upload-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Evitar la subida automática
+        const compareCheckbox = document.getElementById('compare_datasets');
+        const comparisonSection = document.getElementById('comparison-section');
+        const file2Input = document.getElementById('file2');
 
-            let form = document.getElementById('upload-form');
-            let formData = new FormData(form);
-            let xhr = new XMLHttpRequest();
-
-            xhr.open('POST', form.action, true);
-
-            // Actualizar la barra de progreso
-            xhr.upload.addEventListener('progress', function(e) {
-                if (e.lengthComputable) {
-                    let percentComplete = (e.loaded / e.total) * 100;
-                    document.getElementById('progress-bar').value = percentComplete;
-                    document.getElementById('progress-text').innerText = Math.round(percentComplete) + '%';
-                }
-            });
-
-            // Manejar el final de la subida
-            xhr.addEventListener('load', function() {
-                if (xhr.status == 200) {
-                    // Redirigir al procesamiento si todo va bien
-                    window.location.href = xhr.responseURL;
-                } else {
-                    alert('Error uploading file');
-                }
-            });
-
-            xhr.send(formData);
+        compareCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                comparisonSection.style.display = 'block';
+                file2Input.required = true;
+            } else {
+                comparisonSection.style.display = 'none';
+                file2Input.required = false;
+            }
         });
     </script>
 </body>

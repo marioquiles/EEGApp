@@ -23,7 +23,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
             transition: all 0.3s ease-in-out;
         }
@@ -74,70 +74,90 @@
             background-color: #2980b9;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
+        .dataset-section {
+            display: none;
+            margin-top: 20px;
+        }
+        .comparison-active .dataset-section {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="parameter-form">
         <h1>Set Analysis Parameters</h1>
         <form id="parameter-form" method="POST">
+            <!-- Comparison Option -->
             <div class="form-group">
-                <label for="sampling_frequency" class="form-label">Sampling Frequency:</label>
-                <input type="number" step="any" name="sampling_frequency" id="sampling_frequency" class="form-input" required>
+                <label for="compare_datasets" class="form-label">Compare Datasets:</label>
+                <input type="checkbox" id="compare_datasets" name="compare_datasets">
             </div>
 
-            <div class="form-group">
-                <label for="window_size" class="form-label">Window Size:</label>
-                <input type="number" name="window_size" id="window_size" class="form-input" required>
+            <!-- Dataset 1 Parameters -->
+            <div id="dataset1-section" class="dataset-section">
+                <h3>Dataset 1 Parameters</h3>
+                <div class="form-group">
+                    <label for="sampling_frequency1" class="form-label">Sampling Frequency:</label>
+                    <input type="number" step="any" name="sampling_frequency1" id="sampling_frequency1" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="window_size1" class="form-label">Window Size:</label>
+                    <input type="number" name="window_size1" id="window_size1" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="overlap1" class="form-label">Overlap (0 to Window Size):</label>
+                    <input type="number" name="overlap1" id="overlap1" class="form-input" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="analysis_type1" class="form-label">Analysis Type:</label>
+                    <select name="analysis_type1" id="analysis_type1" class="form-input" required>
+                        <option value="emotions">Emotions</option>
+                        <option value="p300">P300</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="overlap" class="form-label">Overlap (0 to Window Size):</label>
-                <input type="number" name="overlap" id="overlap" class="form-input" min="0" required>
+            <!-- Dataset 2 Parameters -->
+            <div id="dataset2-section" class="dataset-section">
+                <h3>Dataset 2 Parameters</h3>
+                <div class="form-group">
+                    <label for="sampling_frequency2" class="form-label">Sampling Frequency:</label>
+                    <input type="number" step="any" name="sampling_frequency2" id="sampling_frequency2" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="window_size2" class="form-label">Window Size:</label>
+                    <input type="number" name="window_size2" id="window_size2" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="overlap2" class="form-label">Overlap (0 to Window Size):</label>
+                    <input type="number" name="overlap2" id="overlap2" class="form-input" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="analysis_type2" class="form-label">Analysis Type:</label>
+                    <select name="analysis_type2" id="analysis_type2" class="form-input">
+                        <option value="emotions">Emotions</option>
+                        <option value="p300">P300</option>
+                    </select>
+                </div>
             </div>
 
-            <span id="error-message">Overlap must be less than the window size.</span>
-
-            <div class="form-group">
-                <label for="analysis_type" class="form-label">Analysis Type:</label>
-                <select name="analysis_type" id="analysis_type" class="form-input" required>
-                    <option value="emotions">Emotions</option>
-                    <option value="p300">P300</option>
-                </select>
-            </div>
-            
             <input type="submit" value="Submit" class="submit-btn">
         </form>
-
     </div>
 
     <script>
-        document.getElementById('parameter-form').addEventListener('submit', function(event) {
-            const windowSize = parseInt(document.getElementById('window_size').value);
-            const overlap = parseInt(document.getElementById('overlap').value);
-            const analysisType = document.getElementById('analysis_type').value;
-            const filename = "{{ filename }}"; // Server-side variable for filename
+        const compareCheckbox = document.getElementById('compare_datasets');
+        const dataset1Section = document.getElementById('dataset1-section');
+        const dataset2Section = document.getElementById('dataset2-section');
 
-            // Update the form action URL based on selected analysis type
-            if (analysisType === 'emotions') {
-                this.action = `/get_parameters/emotions/${filename}`;
-            } else if (analysisType === 'p300') {
-                this.action = `/get_parameters/p300/${filename}`;
+        compareCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                dataset1Section.classList.add('comparison-active');
+                dataset2Section.classList.add('comparison-active');
+            } else {
+                dataset1Section.classList.remove('comparison-active');
+                dataset2Section.classList.remove('comparison-active');
             }
-
-            // Validation for overlap
-            if (overlap >= windowSize) {
-                document.getElementById('error-message').style.display = 'inline';
-                event.preventDefault();
-            }
-        });
-
-        // Hide error message when input values change to valid
-        document.getElementById('window_size').addEventListener('input', function() {
-            document.getElementById('error-message').style.display = 'none';
-        });
-
-        document.getElementById('overlap').addEventListener('input', function() {
-            document.getElementById('error-message').style.display = 'none';
         });
     </script>
 </body>
