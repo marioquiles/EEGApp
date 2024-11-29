@@ -79,7 +79,7 @@
                 } else if (data.status === 'Step 8: Calculating mutual information...') {
                     $('#progress-bar').val(80);
                 } else if (data.status === 'Completed') {
-                    $('#progress-bar').val(90);
+                    $('#progress-bar').val(100);
                     setTimeout(function() {
                         window.location.href = "/results/{{ filename }}"; // Redirige a la página de resultados
                     }, 1000);

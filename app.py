@@ -41,19 +41,47 @@ def upload_file():
             flash('Invalid file type. Only .pkl files are allowed.')
             return redirect(request.url)
 
-        # Save files
+        # Save file1
         filename1 = secure_filename(file1.filename)
         filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
         file1.save(filepath1)
 
+        # Register file1 in file_data
+        file_data[filename1] = filepath1
+
         if compare_datasets:
+            # Save file2
             filename2 = secure_filename(file2.filename)
             filepath2 = os.path.join(app.config['UPLOAD_FOLDER'], filename2)
             file2.save(filepath2)
+
+            # Register file2 in file_data
+            file_data[filename2] = filepath2
+
+            # Redirect to comparison parameters page
             return redirect(url_for('compare_parameters', file1=filename1, file2=filename2))
 
-        return redirect(url_for('get_parameters', filename=filename1))
+        # Redirect to parameters page for single file
+        return redirect(url_for('parameters', filename=filename1))
 
+
+
+@app.route('/parameters/<filename>', methods=['GET'])
+def parameters(filename):
+    return render_template('parameters.html', filename=filename)
+
+@app.route('/get_parameters/<filename>', methods=['POST'])
+def get_parameters(filename):
+    # Obtener el tipo de análisis desde el formulario
+    analysis_type = request.form.get('analysis_type')
+    
+    # Validar el tipo de análisis
+    if analysis_type == 'emotions':
+        return redirect(url_for('get_emotions_parameters', filename=filename))
+    elif analysis_type == 'p300':
+        return redirect(url_for('get_p300_parameters', filename=filename))
+    else:
+        return "Invalid analysis type selected.", 400
 
 @app.route('/compare_parameters/<file1>/<file2>', methods=['GET', 'POST'])
 def compare_parameters(file1, file2):
@@ -161,7 +189,7 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
         processing_status[filename] = f'Error: {str(e)}'
 
 @app.route('/get_parameters/emotions/<filename>', methods=['GET', 'POST'])
-def get_parameters(filename):
+def get_emotions_parameters(filename):
     if request.method == 'POST':
         sampling_frequency = float(request.form['sampling_frequency'])
         window_size = int(request.form['window_size'])
@@ -186,6 +214,15 @@ def get_parameters(filename):
 
     return render_template('parameters.html', filename=filename)
 
+
+@app.route('/process_status/<filename>')
+def processing_status_view(filename):
+    return render_template('loading.html', filename=filename)
+
+@app.route('/status/<filename>', methods=['GET'])
+def get_status(filename):
+    status = processing_status.get(filename, 'Unknown file')
+    return jsonify({'status': status})
 
 # Define the P300-specific data processing function
 def process_p300_data(filepath, filename, sampling_frequency, window_size, overlap):
@@ -268,7 +305,7 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
         processing_status[filename] = f'Error: {str(e)}'
 
 @app.route('/get_parameters/p300/<filename>', methods=['GET', 'POST'])
-def get_p300_parameters(filename):
+def get_P300_parameters(filename):
     if request.method == 'POST':
         # Retrieve form parameters
         sampling_frequency = float(request.form['sampling_frequency'])

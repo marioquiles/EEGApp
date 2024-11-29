@@ -6,6 +6,8 @@
     <title>EEG Dataset Comparison</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -57,6 +59,9 @@
                     </ul>
                 </div>
             </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="sessions">Learn more about how these values are calculated.</a>
+            </p>
         </div>
 
 
@@ -92,6 +97,9 @@
                     </ul>
                 </div>
             </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="lengths">Learn more about how these values are calculated.</a>
+            </p>
         </div>
         
 
@@ -100,6 +108,9 @@
             <div class="section-content">
                 <h2>Dataset 1: {{ datasets.dataset1.filename }}</h2>
                 <h3>Overall Outlier Windows Score: {{ datasets.dataset1.results.final_outlier_score }}</h3>
+                <p class="info-text center-text">
+                    <a href="#" class="modal-link" data-dimension="outliers">Learn more about how these values are calculated.</a>
+                </p>  
                 <canvas id="outlierChart1"></canvas>
                 <button class="toggle-btn" onclick="toggleDetails('outlier-details1')">Details</button>
                 <div id="outlier-details1" class="details-container">
@@ -127,6 +138,9 @@
                     </ul>
                 </div>
             </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="outliers">Learn more about how these values are calculated.</a>
+            </p>    
         </div>
         
 
@@ -162,6 +176,9 @@
                     </ul>
                 </div>
             </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="class-imbalance">Learn more about how these values are calculated.</a>
+            </p>  
         </div>
         
 
@@ -213,9 +230,104 @@
                     </ul>
                 </div>
             </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="filtering-snr">Learn more about how these values are calculated.</a>
+            </p>    
         </div>
         
 
+        <div class="section">
+            <!-- Dataset 1 -->
+            <div class="section-content">
+                <h2>Dataset 1: {{ datasets.dataset1.filename }}</h2>
+                <h3>Overall Class Overlap Score: {{ datasets.dataset1.results.overall_overlap_score | round(2)}}</h3>
+                <canvas id="overlapChart1"></canvas>
+                <button class="toggle-btn" onclick="toggleDetails('overlap-details1')">Details</button>
+                <div class="full-width-scores details-container" id="overlap-details1" style="display: none;">
+                    <div class="table-container">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Subject</th>
+                                    {% for feature_index in range(1, datasets.dataset1.results.overlap_scores_table[0] | length) %}
+                                        <th>Feature {{ feature_index }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in datasets.dataset1.results.overlap_scores_table %}
+                                    <tr>
+                                        <td><strong>{{ row[0] }}</strong></td>
+                                        {% for score in row[1:] %}
+                                            <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                <tr class="table-info">
+                                    <td><strong>Average</strong></td>
+                                    {% if datasets.dataset1.results.overlap_feature_avg %}
+                                        {% for feature_avg in datasets.dataset1.results.overlap_feature_avg %}
+                                            <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
+                                        {% endfor %}
+                                    {% else %}
+                                        <td colspan="{{ datasets.dataset1.results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                                    {% endif %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Dataset 2 -->
+            <div class="section-content">
+                <h2>Dataset 2: {{ datasets.dataset2.filename }}</h2>
+                <h3>Overall Class Overlap Score: {{ datasets.dataset2.results.overall_overlap_score | round(2)}}</h3>
+                <canvas id="overlapChart2"></canvas>
+                <button class="toggle-btn" onclick="toggleDetails('overlap-details2')">Details</button>
+                <div class="full-width-scores details-container" id="overlap-details2" style="display: none;">
+                    <div class="table-container">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Subject</th>
+                                    {% for feature_index in range(1, datasets.dataset2.results.overlap_scores_table[0] | length) %}
+                                        <th>Feature {{ feature_index }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in datasets.dataset2.results.overlap_scores_table %}
+                                    <tr>
+                                        <td><strong>{{ row[0] }}</strong></td>
+                                        {% for score in row[1:] %}
+                                            <td>{{ '%.2f' | format((1 - score) * 100) }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                <tr class="table-info">
+                                    <td><strong>Average</strong></td>
+                                    {% if datasets.dataset2.results.overlap_feature_avg %}
+                                        {% for feature_avg in datasets.dataset2.results.overlap_feature_avg %}
+                                            <td><strong>{{ '%.2f' | format((1 - feature_avg) * 100) }}%</strong></td>
+                                        {% endfor %}
+                                    {% else %}
+                                        <td colspan="{{ datasets.dataset2.results.overlap_scores_table[0] | length - 1 }}"><strong>No data available</strong></td>
+                                    {% endif %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="class-overlap">Learn more about how these values are calculated.</a>
+            </p>  
+        </div>
+        
+        
+
+        
 
         <div class="section">
             <!-- Dataset 1 -->
@@ -295,9 +407,82 @@
                     </div>
                 </div>
             </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="mutual-information">Learn more about how these values are calculated.</a>
+            </p>
         </div>
         
 
+        <div class="section">
+            <!-- Dataset 1 -->
+            <div class="section-content">
+                <h2>Dataset 1: {{ datasets.dataset1.filename }}</h2>
+                <h3>Overall Homogeneity Score: {{ datasets.dataset1.results.overall_homogeneity_score | round(2) }}</h3>
+                <button class="toggle-btn" onclick="toggleDetails('homogeneity-details1')">Details</button>
+                <div id="homogeneity-details1" class="details-container">
+                    <h3>Homogeneity Scores per Feature:</h3>
+                    <ul class="scores-list">
+                        {% for feature, score in datasets.dataset1.results.homogeneity_scores.items() %}
+                            <li>Feature {{ feature }}: {{ score | round(2) }}</li>
+                        {% endfor %}
+                    </ul>
+                    <h3>Variation Scores per Subject:</h3>
+                    <ul class="scores-list">
+                        {% for subject, score in datasets.dataset1.results.subject_variations.items() %}
+                            <li>Subject {{ subject }}: {{ score | round(2) }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <!-- Gráfico de Homogeneidad -->
+                <canvas id="homogeneityChart1"></canvas>
+                <!-- Gráfico de Variación -->
+                <canvas id="variationChart1"></canvas>
+            </div>
+        
+            <!-- Dataset 2 -->
+            <div class="section-content">
+                <h2>Dataset 2: {{ datasets.dataset2.filename }}</h2>
+                <h3>Overall Homogeneity Score: {{ datasets.dataset2.results.overall_homogeneity_score | round(2) }}</h3>
+                <button class="toggle-btn" onclick="toggleDetails('homogeneity-details2')">Details</button>
+                <div id="homogeneity-details2" class="details-container">
+                    <h3>Homogeneity Scores per Feature:</h3>
+                    <ul class="scores-list">
+                        {% for feature, score in datasets.dataset2.results.homogeneity_scores.items() %}
+                            <li>Feature {{ feature }}: {{ score | round(2) }}</li>
+                        {% endfor %}
+                    </ul>
+                    <h3>Variation Scores per Subject:</h3>
+                    <ul class="scores-list">
+                        {% for subject, score in datasets.dataset2.results.subject_variations.items() %}
+                            <li>Subject {{ subject }}: {{ score | round(2) }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <!-- Gráfico de Homogeneidad -->
+                <canvas id="homogeneityChart2"></canvas>
+                <!-- Gráfico de Variación -->
+                <canvas id="variationChart2"></canvas>
+            </div>
+            <p class="info-text center-text">
+                <a href="#" class="modal-link" data-dimension="homogeneity-variation">Learn more about how these values are calculated.</a>
+            </p>
+        </div>
+        
+
+        <div class="section-content">
+            <div class="final-score full-width">
+                <h3>Final Score for Dataset 1:</h3>
+                <p id="finalScore1">85.45</p>
+            </div>
+    
+            <div class="final-score full-width">
+                <h3>Final Score for Dataset 2:</h3>
+                <p id="finalScore2">86.71</p>
+            </div>
+        </div>
+
+
+        
 
 
     </div>
@@ -312,488 +497,559 @@
         }
     }
 
-        // Configuración de gráficos
-        const ctx1 = document.getElementById('sessionChart1').getContext('2d');
-        const ctx2 = document.getElementById('sessionChart2').getContext('2d');
+    const dataset1Results = {{ datasets.dataset1.results | tojson }};
+    const dataset2Results = {{ datasets.dataset2.results | tojson }};
+
+    const modalContent = {
+        sessions: {
+            title: "Session Analysis Info",
+            body: "The Session Score measures the completion rate of sessions across subjects. <b>Higher scores</b> indicate better session coverage.<br><br>" +
+                "The formula used is:<br>" +
+                "\\[ \\text{Score} = \\frac{\\text{Total Completed Sessions}}{\\text{Expected Sessions}} \\times 100 \\]"
+        },
+        lengths: {
+            title: "Length Analysis Info",
+            body: "The Length Score measures the consistency in session lengths for each subject. <b>Higher scores</b> indicate more consistent session lengths.<br><br>" +
+                "The formula used is:<br>" +
+                "\\[ \\text{Score} = \\max(0, (1 - \\text{Coefficient of Variation})) \\times 100 \\]<br>" +
+                "Where:<br>" +
+                "\\[ \\text{Coefficient of Variation} = \\frac{\\text{Standard Deviation of Length}}{\\text{Mean of Length}} \\]"
+        },
+        outliers: {
+            title: "Outlier Analysis Info",
+            body: "The Outlier Analysis measures the percentage of windows that contain extreme values (outliers) in the EEG signals. <b>Higher scores</b> indicate better signal quality.<br><br>" +
+                "The percentage of outlier windows for each subject is calculated as:<br>" +
+                "\\[ \\text{Percentage of Outliers (Subject)} = \\frac{\\text{Number of Outlier Windows}}{\\text{Total Number of Windows}} \\times 100 \\]<br><br>" +
+                "The overall quality score for the dataset is:<br>" +
+                "\\[ \\text{Overall Quality Score} = \\max(0, 100 - \\text{Mean Outlier Percentage}) \\]"
+        },
+        "class-imbalance": {
+            title: "Class Imbalance Analysis Info",
+            body: "The Class Imbalance Analysis measures the distribution of labels across different classes for each subject. <b>Higher scores</b> indicate better balance between classes.<br><br>" +
+                "For each subject, the Class Imbalance Score is calculated as:<br>" +
+                "\\[ \\text{Class Imbalance Score (Subject)} = 1 - \\frac{|f_{\\text{max}} - f_{\\text{min}}|}{f_{\\text{total}}} \\]<br>" +
+                "Where:<br>" +
+                "- \\(f_{\\text{max}}\\): Frequency of the most represented class.<br>" +
+                "- \\(f_{\\text{min}}\\): Frequency of the least represented class.<br>" +
+                "- \\(f_{\\text{total}}\\): Total number of labels for the subject.<br><br>" +
+                "The overall score for the dataset is:<br>" +
+                "\\[ \\text{Overall Class Imbalance Score} = \\frac{\\sum \\text{Class Imbalance Score (Subject)}}{\\text{Total Number of Subjects}} \\]"
+        },
+
+        "filtering-snr": {
+            title: "Filtering Efficiency and SNR Info",
+            body: "This analysis evaluates the filtering efficiency and the Signal-to-Noise Ratio (SNR) of the EEG signals. <b>Higher scores</b> indicate better signal quality and filtering performance.<br><br>" +
+                "<b>Filtering Efficiency:</b><br>" +
+                "The filtering process removes unwanted frequencies outside the band of interest (e.g., 0.5-50 Hz). The overall filtering efficiency for the dataset is calculated as:<br>" +
+                "\\[ \\text{Overall Filtering Efficiency} = \\frac{\\sum \\text{Filtering Efficiency (Subject)}}{\\text{Total Number of Subjects}} \\]<br><br>" +
+                "<b>Signal-to-Noise Ratio (SNR):</b><br>" +
+                "The SNR measures the quality of the signal compared to the noise. It is calculated as:<br>" +
+                "\\[ \\text{SNR (dB)} = 10 \\cdot \\log_{10} \\left( \\frac{P_{\\text{signal}}}{P_{\\text{noise}}} \\right) \\]<br>" +
+                "Where:<br>" +
+                "- \\(P_{\\text{signal}}\\): Power of the filtered signal.<br>" +
+                "- \\(P_{\\text{noise}}\\): Power of the frequencies removed by the filter."
+        },
+
+        "class-overlap": {
+            title: "Class Overlap Analysis Info",
+            body: "The Class Overlap Analysis measures the separation between classes in the dataset using the Bhattacharyya Coefficient. <b>Higher scores</b> indicate better separation between classes.<br><br>" +
+                "<b>Bhattacharyya Coefficient:</b><br>" +
+                "For two classes \\(A\\) and \\(B\\), the Bhattacharyya Coefficient is calculated as:<br>" +
+                "\\[ \\text{Bhattacharyya Coefficient} = 0.25 \\cdot \\ln\\left(0.25 \\cdot \\left(\\frac{\\sigma_A^2}{\\sigma_B^2} + \\frac{\\sigma_B^2}{\\sigma_A^2} + 2\\right)\\right) + 0.25 \\cdot \\frac{(\\mu_A - \\mu_B)^2}{\\sigma_A^2 + \\sigma_B^2} \\]<br>" +
+                "Where:<br>" +
+                "- \\(\\mu_A, \\mu_B\\): Means of the two classes.<br>" +
+                "- \\(\\sigma_A, \\sigma_B\\): Standard deviations of the two classes.<br><br>" +
+                "<b>Class Overlap Score (Subject):</b><br>" +
+                "The average Bhattacharyya Coefficient across all class combinations for a subject. Scores are normalized to the range \\([0, 1]\\).<br><br>" +
+                "<b>Overall Class Overlap Score:</b><br>" +
+                "The mean of all subjects' overlap scores, scaled to \\([0, 100]\\) for interpretability. A <b>higher score</b> indicates better class separation:<br>" +
+                "\\[ \\text{Overall Class Overlap Score} = (1 - \\text{Normalized Overlap Score}) \\times 100 \\]"
+        },
+
+        "mutual-information": {
+        title: "Mutual Information Analysis Info",
+        body: "The Mutual Information (MI) Analysis evaluates the relevance of features in predicting EEG labels. <b>Higher scores</b> indicate greater relevance of the features to the labels.<br><br>" +
+            "<b>Mutual Information (MI):</b><br>" +
+            "For each feature \\(f_i\\), the MI score with respect to the labels \\(Y\\) is calculated as:<br>" +
+            "\\[ \\text{MI}(f_i, Y) = \\sum_{x \\in f_i} \\sum_{y \\in Y} p(x, y) \\log \\left(\\frac{p(x, y)}{p(x)p(y)}\\right) \\]<br>" +
+            "Where:<br>" +
+            "- \\(p(x, y)\\): Joint distribution of the feature and labels.<br>" +
+            "- \\(p(x)\\): Marginal distribution of the feature.<br>" +
+            "- \\(p(y)\\): Marginal distribution of the labels.<br><br>" +
+            "<b>Overall MI Score:</b><br>" +
+            "The mean MI score across all features:<br>" +
+            "\\[ \\text{Overall MI Score} = \\frac{\\sum_{i=1}^n \\text{MI}(f_i, Y)}{n} \\]"
+    },
+
+    "homogeneity-variation": {
+        title: "Homogeneity and Variation Analysis Info",
+        body: "The Homogeneity and Variation Analysis evaluates the consistency and dispersion of features across subjects and sessions. <b>Higher homogeneity scores</b> indicate greater consistency.<br><br>" +
+            "<b>Homogeneity Score:</b><br>" +
+            "The homogeneity score is calculated as:<br>" +
+            "\\[ \\text{Homogeneity Score} = 1 - \\frac{\\text{Standard Deviation of Subject Means}}{\\text{Global Mean}} \\]<br>" +
+            "Where:<br>" +
+            "- \\(\\text{Standard Deviation of Subject Means}\\): Dispersion of the subject-level means.<br>" +
+            "- \\(\\text{Global Mean}\\): Mean of all features across all subjects.<br><br>" +
+            "<b>Variation Score (Subject):</b><br>" +
+            "For each subject, the variation score is calculated as:<br>" +
+            "\\[ \\text{Variation Score (Subject)} = \\frac{\\text{Standard Deviation of Features (Subject)}}{\\text{Mean of Features (Subject)}} \\]<br>" +
+            "<b>Overall Homogeneity Score:</b><br>" +
+            "The mean of all subjects' homogeneity scores."
+    }
 
 
-        // Radar Chart para Dataset 1
-        const ctxMI1 = document.getElementById('miRadarChart1').getContext('2d');
-        new Chart(ctxMI1, {
-            type: 'radar',
-            data: {
-                labels: [
-                    {% for feature_index in range(1, datasets.dataset1.results.mi_scores_table[0] | length) %}
-                        "Feature {{ feature_index }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Mutual Information Score',
-                    data: [
-                        {% for feature_avg in datasets.dataset1.results.mi_feature_avg %}
-                            {{ feature_avg }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    }
-                },
-                scales: {
-                    r: {
-                        angleLines: { display: true },
-                        suggestedMin: 0,
-                        suggestedMax: 1,
-                        ticks: {
-                            stepSize: 0.2
-                        }
-                    }
-                }
-            }
-        });
 
-        // Radar Chart para Dataset 2
-        const ctxMI2 = document.getElementById('miRadarChart2').getContext('2d');
-        new Chart(ctxMI2, {
-            type: 'radar',
-            data: {
-                labels: [
-                    {% for feature_index in range(1, datasets.dataset2.results.mi_scores_table[0] | length) %}
-                        "Feature {{ feature_index }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Mutual Information Score',
-                    data: [
-                        {% for feature_avg in datasets.dataset2.results.mi_feature_avg %}
-                            {{ feature_avg }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    pointBackgroundColor: 'rgba(255, 159, 64, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(255, 159, 64, 1)'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    }
-                },
-                scales: {
-                    r: {
-                        angleLines: { display: true },
-                        suggestedMin: 0,
-                        suggestedMax: 1,
-                        ticks: {
-                            stepSize: 0.2
-                        }
-                    }
-                }
-            }
-        });
+    };
 
-        // Radar Chart para Dataset 1
-        const ctxOverlap1 = document.getElementById('overlapRadarChart1').getContext('2d');
-        new Chart(ctxOverlap1, {
-            type: 'radar',
-            data: {
-                labels: [
-                    {% for feature_index in range(1, datasets.dataset1.results.overlap_scores_table[0] | length) %}
-                        "Feature {{ feature_index }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Overlap Score',
-                    data: [
-                        {% for feature_avg in datasets.dataset1.results.overlap_feature_avg %}
-                            {{ (1 - feature_avg) * 100 }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    }
-                },
-                scales: {
-                    r: {
-                        angleLines: { display: true },
-                        suggestedMin: 0,
-                        suggestedMax: 100,
-                        ticks: {
-                            stepSize: 20
-                        }
-                    }
-                }
-            }
-        });
-
+    // Asignar eventos a los enlaces
+    document.addEventListener("DOMContentLoaded", () => {
+        const links = document.querySelectorAll(".modal-link");
         
+        const modal = document.getElementById("infoModal");
+        modal.style.display = "none";
 
-        // Gráfico de SNR para Dataset 1
-        const ctxSNR1 = document.getElementById('snrChart1').getContext('2d');
-        new Chart(ctxSNR1, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset1.results.snr_per_subject | length + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'SNR (dB)',
-                    data: [
-                        {% for score in datasets.dataset1.results.snr_per_subject %}
-                            {{ score }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } }
-            }
+        links.forEach(link => {
+            link.addEventListener("click", (event) => {
+                event.preventDefault(); // Evitar que el enlace recargue la página
+
+                const dimension = link.getAttribute("data-dimension");
+                if (modalContent[dimension]) {
+                    const { title, body } = modalContent[dimension];
+                    showInfoModal(title, body);
+                }
+            });
         });
-
-        // Gráfico de eficiencia de filtrado para Dataset 1
-        const ctxFiltering1 = document.getElementById('filteringChart1').getContext('2d');
-        new Chart(ctxFiltering1, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset1.results.filter_efficiency_per_subject | length + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Filtering Efficiency (%)',
-                    data: [
-                        {% for efficiency in datasets.dataset1.results.filter_efficiency_per_subject %}
-                            {{ efficiency }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
-
-        // Repite para Dataset 2
-        const ctxSNR2 = document.getElementById('snrChart2').getContext('2d');
-        new Chart(ctxSNR2, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset2.results.snr_per_subject | length + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'SNR (dB)',
-                    data: [
-                        {% for score in datasets.dataset2.results.snr_per_subject %}
-                            {{ score }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-
-        const ctxFiltering2 = document.getElementById('filteringChart2').getContext('2d');
-        new Chart(ctxFiltering2, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset2.results.filter_efficiency_per_subject | length + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Filtering Efficiency (%)',
-                    data: [
-                        {% for efficiency in datasets.dataset2.results.filter_efficiency_per_subject %}
-                            {{ efficiency }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
-
-
-        // Gráfico para Dataset 1 - Desbalance de Clases
-        const ctxImbalance1 = document.getElementById('imbalanceChart1').getContext('2d');
-        new Chart(ctxImbalance1, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset1.results.class_imbalance_scores | length + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Class Imbalance Score',
-                    data: [
-                        {% for score in datasets.dataset1.results.class_imbalance_scores %}
-                            {{ score }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
-
-        // Gráfico para Dataset 2 - Desbalance de Clases
-        const ctxImbalance2 = document.getElementById('imbalanceChart2').getContext('2d');
-        new Chart(ctxImbalance2, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset2.results.class_imbalance_scores | length + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Class Imbalance Score',
-                    data: [
-                        {% for score in datasets.dataset2.results.class_imbalance_scores %}
-                            {{ score }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
-
-
-        // Gráfico para Dataset 1 - Outliers
-        const ctxOutlier1 = document.getElementById('outlierChart1').getContext('2d');
-        new Chart(ctxOutlier1, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for subject in datasets.dataset1.results.outlier_percentages.keys() %}
-                        "Subject {{ subject }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Percentage of Outlier Windows',
-                    data: [
-                        {% for percentage in datasets.dataset1.results.outlier_percentages.values() %}
-                            {{ percentage }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
-
-        // Gráfico para Dataset 2 - Outliers
-        const ctxOutlier2 = document.getElementById('outlierChart2').getContext('2d');
-        new Chart(ctxOutlier2, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for subject in datasets.dataset2.results.outlier_percentages.keys() %}
-                        "Subject {{ subject }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Percentage of Outlier Windows',
-                    data: [
-                        {% for percentage in datasets.dataset2.results.outlier_percentages.values() %}
-                            {{ percentage }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
-
-
-
-        // Gráfico para Dataset 1 - Longitud
-    const ctxLength1 = document.getElementById('lengthChart1').getContext('2d');
-    new Chart(ctxLength1, {
-        type: 'bar',
-        data: {
-            labels: [
-                {% for i in range(1, datasets.dataset1.results.scores_per_channel | length + 1) %}
-                    "Channel {{ i }}",
-                {% endfor %}
-            ],
-            datasets: [{
-                label: 'Length Score per Channel',
-                data: [
-                    {% for score in datasets.dataset1.results.scores_per_channel %}
-                        {{ score }},
-                    {% endfor %}
-                ],
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } }
-        }
     });
 
-    // Gráfico para Dataset 2 - Longitud
-    const ctxLength2 = document.getElementById('lengthChart2').getContext('2d');
-    new Chart(ctxLength2, {
-        type: 'bar',
-        data: {
-            labels: [
-                {% for i in range(1, datasets.dataset2.results.scores_per_channel | length + 1) %}
-                    "Channel {{ i }}",
+    function calculateFinalScore(results) {
+        const dimensions = [
+            "final_score_sessions",
+            "overall_score_length",
+            "final_outlier_score",
+            "total_imbalance_score",
+            "overall_overlap_score",
+            "overall_homogeneity_score",
+            "overall_mi_score",
+            "filtering_snr_score",
+            "filtering_efficiency_score" // Añade esta dimensión si aplica
+        ];
+
+        let totalScore = 0;
+        let count = 0;
+
+        dimensions.forEach(dimension => {
+            if (results[dimension] !== undefined) {
+                totalScore += results[dimension];
+                count++;
+            }
+        });
+
+        return count > 0 ? (totalScore / count).toFixed(2) : "N/A";
+    }
+
+    // Función para mostrar el modal
+    function showInfoModal(title, body) {
+        const modal = document.getElementById("infoModal");
+        document.getElementById("modalTitle").innerText = title;
+        document.getElementById("modalBody").innerHTML = body;
+        MathJax.typeset(); // Renderizar las fórmulas
+        modal.style.display = "flex"; // Mostrar el modal
+    }
+
+    // Función para ocultar el modal
+    function hideInfoModal() {
+        const modal = document.getElementById("infoModal");
+        modal.style.display = "none"; // Ocultar el modal
+    }
+
+    // Cerrar el modal al hacer clic fuera
+    window.onclick = function(event) {
+        const modal = document.getElementById("infoModal");
+        if (event.target === modal) {
+            hideInfoModal();
+        }
+    };
+
+
+    // Función genérica para inicializar gráficos
+    function createChart(canvasId, chartType, labels, data, backgroundColor, borderColor, chartLabel) {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        console.log(`Initializing chart: ${canvasId}`);
+        new Chart(ctx, {
+            type: chartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: chartLabel,
+                    data: data,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true }
+                },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    } else {
+        console.error(`Canvas with ID '${canvasId}' not found.`);
+    }
+}
+
+
+
+    // Inicializar gráficos después de cargar el DOM
+    document.addEventListener('DOMContentLoaded', function () {
+
+           // Charts for Length Scores
+    createChart(
+        'lengthChart1', 'bar',
+        [{% for i in range(1, datasets.dataset1.results.scores_per_channel | length + 1) %}"Channel {{ i }}",{% endfor %}],
+        [{% for score in datasets.dataset1.results.scores_per_channel %}{{ score }},{% endfor %}],
+        'rgba(75, 192, 192, 0.6)', 'rgba(75, 192, 192, 1)', 'Length Score per Channel'
+    );
+
+    createChart(
+        'lengthChart2', 'bar',
+        [{% for i in range(1, datasets.dataset2.results.scores_per_channel | length + 1) %}"Channel {{ i }}",{% endfor %}],
+        [{% for score in datasets.dataset2.results.scores_per_channel %}{{ score }},{% endfor %}],
+        'rgba(255, 159, 64, 0.6)', 'rgba(255, 159, 64, 1)', 'Length Score per Channel'
+    );
+
+
+    createChart(
+        'sessionChart1', 'bar',
+        [{% for i in range(1, datasets.dataset1.results.num_sujetos + 1) %}"Subject {{ i }}",{% endfor %}],
+        [{% for score in datasets.dataset1.results.session_scores %}{{ score }},{% endfor %}],
+        'rgba(75, 192, 192, 0.6)', 'rgba(75, 192, 192, 1)', 'Session Scores'
+    );
+
+    createChart(
+        'sessionChart2', 'bar',
+        [{% for i in range(1, datasets.dataset2.results.num_sujetos + 1) %}"Subject {{ i }}",{% endfor %}],
+        [{% for score in datasets.dataset2.results.session_scores %}{{ score }},{% endfor %}],
+        'rgba(255, 159, 64, 0.6)', 'rgba(255, 159, 64, 1)', 'Session Scores'
+    );
+
+    createChart(
+        'outlierChart1', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for subject in datasets.dataset1.results.outlier_percentages.keys() %}
+                "Subject {{ subject }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for percentage in datasets.dataset1.results.outlier_percentages.values() %}
+                {{ percentage }},
+            {% endfor %}
+        ], // Datos
+        'rgba(255, 99, 132, 0.6)', // Color de fondo
+        'rgba(255, 99, 132, 1)', // Color del borde
+        'Percentage of Outlier Windows' // Etiqueta del gráfico
+    );
+
+    createChart(
+        'outlierChart2', 'bar',
+        [
+            {% for subject in datasets.dataset2.results.outlier_percentages.keys() %}
+                "Subject {{ subject }}",
+            {% endfor %}
+        ],
+        [
+            {% for percentage in datasets.dataset2.results.outlier_percentages.values() %}
+                {{ percentage }},
+            {% endfor %}
+        ],
+        'rgba(54, 162, 235, 0.6)', 'rgba(54, 162, 235, 1)', 'Percentage of Outlier Windows'
+    );
+
+
+        createChart(
+        'imbalanceChart1', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for i in range(1, datasets.dataset1.results.class_imbalance_scores | length + 1) %}
+                "Subject {{ i }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for score in datasets.dataset1.results.class_imbalance_scores %}
+                {{ score }},
+            {% endfor %}
+        ], // Datos
+        'rgba(153, 102, 255, 0.6)', // Color de fondo
+        'rgba(153, 102, 255, 1)', // Color del borde
+        'Class Imbalance Score' // Etiqueta del gráfico
+    );
+
+        createChart(
+        'imbalanceChart2', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for i in range(1, datasets.dataset2.results.class_imbalance_scores | length + 1) %}
+                "Subject {{ i }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for score in datasets.dataset2.results.class_imbalance_scores %}
+                {{ score }},
+            {% endfor %}
+        ], // Datos
+        'rgba(255, 159, 64, 0.6)', // Color de fondo
+        'rgba(255, 159, 64, 1)', // Color del borde
+        'Class Imbalance Score' // Etiqueta del gráfico
+    );
+
+// Ejemplo: Gráfico de barras para SNR (Dataset 1)
+createChart(
+            'snrChart1',
+            'bar',
+            [
+                {% for i in range(1, datasets.dataset1.results.snr_per_subject | length + 1) %}
+                    "Subject {{ i }}",
                 {% endfor %}
             ],
-            datasets: [{
-                label: 'Length Score per Channel',
-                data: [
-                    {% for score in datasets.dataset2.results.scores_per_channel %}
-                        {{ score }},
-                    {% endfor %}
-                ],
-                backgroundColor: 'rgba(255, 159, 64, 0.6)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } }
-        }
+            [
+                {% for score in datasets.dataset1.results.snr_per_subject %}
+                    {{ score }},
+                {% endfor %}
+            ],
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(54, 162, 235, 1)',
+            'SNR (dB)'
+        );
+
+        // Ejemplo: Gráfico de barras para SNR (Dataset 2)
+        createChart(
+            'snrChart2',
+            'bar',
+            [
+                {% for i in range(1, datasets.dataset2.results.snr_per_subject | length + 1) %}
+                    "Subject {{ i }}",
+                {% endfor %}
+            ],
+            [
+                {% for score in datasets.dataset2.results.snr_per_subject %}
+                    {{ score }},
+                {% endfor %}
+            ],
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(255, 99, 132, 1)',
+            'SNR (dB)'
+        );
+
+        createChart(
+            'filteringChart1', // ID del canvas
+            'bar', // Tipo de gráfico
+            [
+                {% for i in range(1, datasets.dataset1.results.filter_efficiency_per_subject | length + 1) %}
+                    "Subject {{ i }}",
+                {% endfor %}
+            ], // Etiquetas
+            [
+                {% for efficiency in datasets.dataset1.results.filter_efficiency_per_subject %}
+                    {{ efficiency }},
+                {% endfor %}
+            ], // Datos
+            'rgba(75, 192, 192, 0.6)', // Color de fondo
+            'rgba(75, 192, 192, 1)', // Color del borde
+            'Filtering Efficiency (%)' // Etiqueta del gráfico
+        );
+
+        createChart(
+            'filteringChart2', // ID del canvas
+            'bar', // Tipo de gráfico
+            [
+                {% for i in range(1, datasets.dataset2.results.filter_efficiency_per_subject | length + 1) %}
+                    "Subject {{ i }}",
+                {% endfor %}
+            ], // Etiquetas
+            [
+                {% for efficiency in datasets.dataset2.results.filter_efficiency_per_subject %}
+                    {{ efficiency }},
+                {% endfor %}
+            ], // Datos
+            'rgba(153, 102, 255, 0.6)', // Color de fondo
+            'rgba(153, 102, 255, 1)', // Color del borde
+            'Filtering Efficiency (%)' // Etiqueta del gráfico
+    );
+
+    createChart(
+        'overlapChart1', 'radar',
+        [
+            {% for feature_index in range(1, datasets.dataset1.results.overlap_feature_avg | length + 1) %}
+                "Feature {{ feature_index }}",
+            {% endfor %}
+        ],
+        [
+            {% for feature_avg in datasets.dataset1.results.overlap_feature_avg %}
+                {{ '%.2f' | format((1 - feature_avg) * 100) }},
+            {% endfor %}
+        ],
+        'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 'Class Overlap Dataset 1'
+    );
+
+    createChart(
+        'overlapChart2', 'radar',
+        [
+            {% for feature_index in range(1, datasets.dataset2.results.overlap_feature_avg | length + 1) %}
+                "Feature {{ feature_index }}",
+            {% endfor %}
+        ],
+        [
+            {% for feature_avg in datasets.dataset2.results.overlap_feature_avg %}
+                {{ '%.2f' | format((1 - feature_avg) * 100) }},
+            {% endfor %}
+        ],
+        'rgba(255, 99, 132, 0.2)', 'rgba(255, 99, 132, 1)', 'Class Overlap Dataset 2'
+    );
+
+
+
+        // Ejemplo: Gráfico de radar para Mutual Information Score (Dataset 1 y 2)
+        createChart(
+            'miRadarChart1',
+            'radar',
+            [
+                {% for feature_index in range(1, datasets.dataset1.results.mi_scores_table[0] | length) %}
+                    "Feature {{ feature_index }}",
+                {% endfor %}
+            ],
+            [
+                {% for feature_avg in datasets.dataset1.results.mi_feature_avg %}
+                    {{ feature_avg }},
+                {% endfor %}
+            ],
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(75, 192, 192, 1)',
+            'Mutual Information Score'
+        );
+
+        createChart(
+            'miRadarChart2',
+            'radar',
+            [
+                {% for feature_index in range(1, datasets.dataset2.results.mi_scores_table[0] | length) %}
+                    "Feature {{ feature_index }}",
+                {% endfor %}
+            ],
+            [
+                {% for feature_avg in datasets.dataset2.results.mi_feature_avg %}
+                    {{ feature_avg }},
+                {% endfor %}
+            ],
+            'rgba(255, 159, 64, 0.2)',
+            'rgba(255, 159, 64, 1)',
+            'Mutual Information Score'
+        );
+
+
+    createChart(
+        'homogeneityChart1', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for feature in datasets.dataset1.results.homogeneity_scores.keys() %}
+                "Feature {{ feature }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for score in datasets.dataset1.results.homogeneity_scores.values() %}
+                {{ score | round(2) }},
+            {% endfor %}
+        ], // Datos
+        'rgba(75, 192, 192, 0.6)', // Color de fondo
+        'rgba(75, 192, 192, 1)', // Color del borde
+        'Homogeneity Scores by Feature' // Etiqueta del gráfico
+    );
+
+    createChart(
+        'homogeneityChart2', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for feature in datasets.dataset2.results.homogeneity_scores.keys() %}
+                "Feature {{ feature }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for score in datasets.dataset2.results.homogeneity_scores.values() %}
+                {{ score | round(2) }},
+            {% endfor %}
+        ], // Datos
+        'rgba(54, 162, 235, 0.6)', // Color de fondo
+        'rgba(54, 162, 235, 1)', // Color del borde
+        'Homogeneity Scores by Feature' // Etiqueta del gráfico
+    );
+
+        // Variation Chart for Dataset 1
+    createChart(
+        'variationChart1', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for subject in datasets.dataset1.results.subject_variations.keys() %}
+                "{{ subject }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for score in datasets.dataset1.results.subject_variations.values() %}
+                {{ score | round(2) }},
+            {% endfor %}
+        ], // Datos
+        'rgba(255, 99, 132, 0.6)', // Color de fondo
+        'rgba(255, 99, 132, 1)', // Color del borde
+        'Subject Variation Scores' // Etiqueta del gráfico
+    );
+
+    // Variation Chart for Dataset 2
+    createChart(
+        'variationChart2', // ID del canvas
+        'bar', // Tipo de gráfico
+        [
+            {% for subject in datasets.dataset2.results.subject_variations.keys() %}
+                "{{ subject }}",
+            {% endfor %}
+        ], // Etiquetas
+        [
+            {% for score in datasets.dataset2.results.subject_variations.values() %}
+                {{ score | round(2) }},
+            {% endfor %}
+        ], // Datos
+        'rgba(153, 102, 255, 0.6)', // Color de fondo
+        'rgba(153, 102, 255, 1)', // Color del borde
+        'Subject Variation Scores' // Etiqueta del gráfico
+    );
+
+    // Cálculo para ambos datasets
+    const finalScore1 = calculateFinalScore(dataset1Results);
+    const finalScore2 = calculateFinalScore(dataset2Results);
+
+    // Mostrar los resultados en el HTML
+    document.getElementById("finalScore1").innerText = finalScore1;
+    document.getElementById("finalScore2").innerText = finalScore2;
+
+    
     });
 
 
 
-        // Gráfico para dataset 1
-        new Chart(ctx1, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset1.results.num_sujetos + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Session Scores',
-                    data: [
-                        {% for score in datasets.dataset1.results.session_scores %}
-                            {{ score }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
 
-        // Gráfico para dataset 2
-        new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for i in range(1, datasets.dataset2.results.num_sujetos + 1) %}
-                        "Subject {{ i }}",
-                    {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Session Scores',
-                    data: [
-                        {% for score in datasets.dataset2.results.session_scores %}
-                            {{ score }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
 
-        // Repite la configuración para gráficos adicionales
+
     </script>
+
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="hideInfoModal()">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalBody"></p>
+    </div>
+</div>
+
 </body>
 </html>

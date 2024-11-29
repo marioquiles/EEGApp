@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
 </head>
 
 <body>
@@ -38,6 +41,12 @@
                 <button class="toggle-btn" onclick="toggleDetails('session-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Session Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" onclick="showInfoModal('Session Score Info',     'The Overall Session Score measures the completion rate of sessions across subjects. <b>Higher scores</b> indicate better session coverage.<br><br>The formula used is: \\[ \\text{Score} = \\frac{\\text{Total Completed Sessions}}{\\text{Expected Sessions}} \\times 100 \\]')">
+                        Learn more about how these values are calculated.
+                    </a>
+                </p>
             </div>
 
             <div class="chart-container">
@@ -65,6 +74,11 @@
                 <button class="toggle-btn" onclick="toggleDetails('length-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Length Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="lengths">Learn more about how these values are calculated.</a>
+                </p>
+
             </div>
 
             <div class="chart-container">
@@ -86,10 +100,14 @@
         <div class="section">
             <div class="section-content">
                 <h3>Outlier Analysis:</h3>
-                <p>Overall Outlier Windows Score: {{ results.final_outlier_score }}</p>
+                <p>Overall Outlier Quality Score: {{ results.final_outlier_score }}</p>
                 <button class="toggle-btn" onclick="toggleDetails('outlier-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Outlier Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="outliers">Learn more about how these values are calculated.</a>
+                </p>                 
             </div>
 
             <div class="chart-container">
@@ -115,6 +133,10 @@
                 <button class="toggle-btn" onclick="toggleDetails('imbalance-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Imbalance Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="class-imbalance">Learn more about how these values are calculated.</a>
+                </p>                                           
             </div>
 
             <div class="chart-container">
@@ -141,6 +163,10 @@
                 <button class="toggle-btn" onclick="toggleDetails('noise-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Noise Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="filtering-snr">Learn more about how these values are calculated.</a>
+                </p>                
             </div>
 
             <div class="chart-container">
@@ -173,6 +199,10 @@
                 <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="class-overlap">Learn more about how these values are calculated.</a>
+                </p>                
             </div>
 
             <!-- Radar Chart to the Right -->
@@ -226,6 +256,10 @@
                 <button class="toggle-btn" onclick="toggleDetails('mi-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide MI Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="mutual-information">Learn more about how these values are calculated.</a>
+                </p>
             </div>
 
             <!-- Radar Chart for MI Analysis -->
@@ -277,6 +311,10 @@
                 <button class="toggle-btn" onclick="toggleDetails('homogeneity-variation-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Details
                 </button>
+
+                <p class="info-text">
+                    <a href="#" class="modal-link" data-dimension="homogeneity-variation">Learn more about how these values are calculated.</a>
+                </p>                
             </div>
         
             <!-- Gráfico de Homogeneidad por Característica -->
@@ -317,17 +355,163 @@
         
     </div>
 
-        <script>
-            function toggleDetails(containerId) {
-                var container = document.getElementById(containerId);
-                if (container.style.display === "none" || container.style.display === "") {
-                    container.style.display = "block";
-                } else {
-                    container.style.display = "none";
-                }
-            }
+    <script>
+    function toggleDetails(containerId) {
+        var container = document.getElementById(containerId);
+        if (container.style.display === "none" || container.style.display === "") {
+            container.style.display = "block";
+        } else {
+            container.style.display = "none";
+        }
+    }
 
-                        // Radar Chart Configuration for Class Overlap Analysis
+    // Definir el contenido de cada dimensión
+    const modalContent = {
+        sessions: {
+            title: "Session Analysis Info",
+            body: "The Session Score measures the completion rate of sessions across subjects. <b>Higher scores</b> indicate better session coverage.<br><br>" +
+                "The formula used is:<br>" +
+                "\\[ \\text{Score} = \\frac{\\text{Total Completed Sessions}}{\\text{Expected Sessions}} \\times 100 \\]"
+        },
+        lengths: {
+            title: "Length Analysis Info",
+            body: "The Length Score measures the consistency in session lengths for each subject. <b>Higher scores</b> indicate more consistent session lengths.<br><br>" +
+                "The formula used is:<br>" +
+                "\\[ \\text{Score} = \\max(0, (1 - \\text{Coefficient of Variation})) \\times 100 \\]<br>" +
+                "Where:<br>" +
+                "\\[ \\text{Coefficient of Variation} = \\frac{\\text{Standard Deviation of Length}}{\\text{Mean of Length}} \\]"
+        },
+        outliers: {
+            title: "Outlier Analysis Info",
+            body: "The Outlier Analysis measures the percentage of windows that contain extreme values (outliers) in the EEG signals. <b>Higher scores</b> indicate better signal quality.<br><br>" +
+                "The percentage of outlier windows for each subject is calculated as:<br>" +
+                "\\[ \\text{Percentage of Outliers (Subject)} = \\frac{\\text{Number of Outlier Windows}}{\\text{Total Number of Windows}} \\times 100 \\]<br><br>" +
+                "The overall quality score for the dataset is:<br>" +
+                "\\[ \\text{Overall Quality Score} = \\max(0, 100 - \\text{Mean Outlier Percentage}) \\]"
+        },
+        "class-imbalance": {
+            title: "Class Imbalance Analysis Info",
+            body: "The Class Imbalance Analysis measures the distribution of labels across different classes for each subject. <b>Higher scores</b> indicate better balance between classes.<br><br>" +
+                "For each subject, the Class Imbalance Score is calculated as:<br>" +
+                "\\[ \\text{Class Imbalance Score (Subject)} = 1 - \\frac{|f_{\\text{max}} - f_{\\text{min}}|}{f_{\\text{total}}} \\]<br>" +
+                "Where:<br>" +
+                "- \\(f_{\\text{max}}\\): Frequency of the most represented class.<br>" +
+                "- \\(f_{\\text{min}}\\): Frequency of the least represented class.<br>" +
+                "- \\(f_{\\text{total}}\\): Total number of labels for the subject.<br><br>" +
+                "The overall score for the dataset is:<br>" +
+                "\\[ \\text{Overall Class Imbalance Score} = \\frac{\\sum \\text{Class Imbalance Score (Subject)}}{\\text{Total Number of Subjects}} \\]"
+        },
+
+        "filtering-snr": {
+            title: "Filtering Efficiency and SNR Info",
+            body: "This analysis evaluates the filtering efficiency and the Signal-to-Noise Ratio (SNR) of the EEG signals. <b>Higher scores</b> indicate better signal quality and filtering performance.<br><br>" +
+                "<b>Filtering Efficiency:</b><br>" +
+                "The filtering process removes unwanted frequencies outside the band of interest (e.g., 0.5-50 Hz). The overall filtering efficiency for the dataset is calculated as:<br>" +
+                "\\[ \\text{Overall Filtering Efficiency} = \\frac{\\sum \\text{Filtering Efficiency (Subject)}}{\\text{Total Number of Subjects}} \\]<br><br>" +
+                "<b>Signal-to-Noise Ratio (SNR):</b><br>" +
+                "The SNR measures the quality of the signal compared to the noise. It is calculated as:<br>" +
+                "\\[ \\text{SNR (dB)} = 10 \\cdot \\log_{10} \\left( \\frac{P_{\\text{signal}}}{P_{\\text{noise}}} \\right) \\]<br>" +
+                "Where:<br>" +
+                "- \\(P_{\\text{signal}}\\): Power of the filtered signal.<br>" +
+                "- \\(P_{\\text{noise}}\\): Power of the frequencies removed by the filter."
+        },
+
+        "class-overlap": {
+            title: "Class Overlap Analysis Info",
+            body: "The Class Overlap Analysis measures the separation between classes in the dataset using the Bhattacharyya Coefficient. <b>Higher scores</b> indicate better separation between classes.<br><br>" +
+                "<b>Bhattacharyya Coefficient:</b><br>" +
+                "For two classes \\(A\\) and \\(B\\), the Bhattacharyya Coefficient is calculated as:<br>" +
+                "\\[ \\text{Bhattacharyya Coefficient} = 0.25 \\cdot \\ln\\left(0.25 \\cdot \\left(\\frac{\\sigma_A^2}{\\sigma_B^2} + \\frac{\\sigma_B^2}{\\sigma_A^2} + 2\\right)\\right) + 0.25 \\cdot \\frac{(\\mu_A - \\mu_B)^2}{\\sigma_A^2 + \\sigma_B^2} \\]<br>" +
+                "Where:<br>" +
+                "- \\(\\mu_A, \\mu_B\\): Means of the two classes.<br>" +
+                "- \\(\\sigma_A, \\sigma_B\\): Standard deviations of the two classes.<br><br>" +
+                "<b>Class Overlap Score (Subject):</b><br>" +
+                "The average Bhattacharyya Coefficient across all class combinations for a subject. Scores are normalized to the range \\([0, 1]\\).<br><br>" +
+                "<b>Overall Class Overlap Score:</b><br>" +
+                "The mean of all subjects' overlap scores, scaled to \\([0, 100]\\) for interpretability. A <b>higher score</b> indicates better class separation:<br>" +
+                "\\[ \\text{Overall Class Overlap Score} = (1 - \\text{Normalized Overlap Score}) \\times 100 \\]"
+        },
+
+        "mutual-information": {
+        title: "Mutual Information Analysis Info",
+        body: "The Mutual Information (MI) Analysis evaluates the relevance of features in predicting EEG labels. <b>Higher scores</b> indicate greater relevance of the features to the labels.<br><br>" +
+            "<b>Mutual Information (MI):</b><br>" +
+            "For each feature \\(f_i\\), the MI score with respect to the labels \\(Y\\) is calculated as:<br>" +
+            "\\[ \\text{MI}(f_i, Y) = \\sum_{x \\in f_i} \\sum_{y \\in Y} p(x, y) \\log \\left(\\frac{p(x, y)}{p(x)p(y)}\\right) \\]<br>" +
+            "Where:<br>" +
+            "- \\(p(x, y)\\): Joint distribution of the feature and labels.<br>" +
+            "- \\(p(x)\\): Marginal distribution of the feature.<br>" +
+            "- \\(p(y)\\): Marginal distribution of the labels.<br><br>" +
+            "<b>Overall MI Score:</b><br>" +
+            "The mean MI score across all features:<br>" +
+            "\\[ \\text{Overall MI Score} = \\frac{\\sum_{i=1}^n \\text{MI}(f_i, Y)}{n} \\]"
+    },
+
+    "homogeneity-variation": {
+        title: "Homogeneity and Variation Analysis Info",
+        body: "The Homogeneity and Variation Analysis evaluates the consistency and dispersion of features across subjects and sessions. <b>Higher homogeneity scores</b> indicate greater consistency.<br><br>" +
+            "<b>Homogeneity Score:</b><br>" +
+            "The homogeneity score is calculated as:<br>" +
+            "\\[ \\text{Homogeneity Score} = 1 - \\frac{\\text{Standard Deviation of Subject Means}}{\\text{Global Mean}} \\]<br>" +
+            "Where:<br>" +
+            "- \\(\\text{Standard Deviation of Subject Means}\\): Dispersion of the subject-level means.<br>" +
+            "- \\(\\text{Global Mean}\\): Mean of all features across all subjects.<br><br>" +
+            "<b>Variation Score (Subject):</b><br>" +
+            "For each subject, the variation score is calculated as:<br>" +
+            "\\[ \\text{Variation Score (Subject)} = \\frac{\\text{Standard Deviation of Features (Subject)}}{\\text{Mean of Features (Subject)}} \\]<br>" +
+            "<b>Overall Homogeneity Score:</b><br>" +
+            "The mean of all subjects' homogeneity scores."
+    }
+
+
+
+    };
+
+    // Asignar eventos a los enlaces
+    document.addEventListener("DOMContentLoaded", () => {
+        const links = document.querySelectorAll(".modal-link");
+        
+        const modal = document.getElementById("infoModal");
+        modal.style.display = "none";
+
+        links.forEach(link => {
+            link.addEventListener("click", (event) => {
+                event.preventDefault(); // Evitar que el enlace recargue la página
+
+                const dimension = link.getAttribute("data-dimension");
+                if (modalContent[dimension]) {
+                    const { title, body } = modalContent[dimension];
+                    showInfoModal(title, body);
+                }
+            });
+        });
+    });
+
+    // Función para mostrar el modal
+    function showInfoModal(title, body) {
+        const modal = document.getElementById("infoModal");
+        document.getElementById("modalTitle").innerText = title;
+        document.getElementById("modalBody").innerHTML = body;
+        MathJax.typeset(); // Renderizar las fórmulas
+        modal.style.display = "flex"; // Mostrar el modal
+    }
+
+    // Función para ocultar el modal
+    function hideInfoModal() {
+        const modal = document.getElementById("infoModal");
+        modal.style.display = "none"; // Ocultar el modal
+    }
+
+    // Cerrar el modal al hacer clic fuera
+    window.onclick = function(event) {
+        const modal = document.getElementById("infoModal");
+        if (event.target === modal) {
+            hideInfoModal();
+        }
+    };
+
+
+    // Radar Chart Configuration for Class Overlap Analysis
         const featureLabels = [
         {% for feature_index in range(1, results.overlap_scores_table[0] | length) %}
             "Feature {{ feature_index }}",
@@ -806,6 +990,18 @@ new Chart(
             }
         }
     });
+
 </script>
+
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="hideInfoModal()">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalBody"></p>
+    </div>
+</div>
+
+
+
 </body>
 </html>
