@@ -97,9 +97,6 @@
                     </ul>
                 </div>
             </div>
-            <p class="info-text center-text">
-                <a href="#" class="modal-link" data-dimension="lengths">Learn more about how these values are calculated.</a>
-            </p>
         </div>
         
 
@@ -694,13 +691,23 @@
                 plugins: {
                     legend: { display: true }
                 },
-                scales: { y: { beginAtZero: true } }
+                scales: {
+                    y: {
+                        beginAtZero: true, // Asegura que el eje comience en 0
+                        max: 100, // Fija el rango máximo en 100
+                        title: {
+                            display: true,
+                            text: 'Score (0-100)' // Etiqueta del eje Y
+                        }
+                    }
+                }
             }
         });
     } else {
         console.error(`Canvas with ID '${canvasId}' not found.`);
     }
 }
+
 
 
 

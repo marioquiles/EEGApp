@@ -12,10 +12,11 @@ def calculate_length_scores(eeg_data):
 
     Retorna:
         scores_per_subject: Lista de puntajes para cada sujeto
-        overall_score: Puntaje general del dataset
+        overall_score: Puntaje general del dataset basado en todas las sesiones
     """
     # Inicializar un diccionario para almacenar las longitudes de las sesiones por sujeto
     session_lengths_per_subject = {}
+    all_session_lengths = []  # Lista para almacenar todas las longitudes de sesiones
 
     # Recorrer los datos para calcular la longitud de cada sesión por sujeto
     for subject_id, sessions in eeg_data.items():
@@ -25,6 +26,7 @@ def calculate_length_scores(eeg_data):
             # La longitud de la sesión es la segunda dimensión del array (número de muestras)
             session_length = session_data.shape[1]
             session_lengths.append(session_length)
+            all_session_lengths.append(session_length)  # Agregar la longitud a la lista global
 
         session_lengths_per_subject[subject_id] = session_lengths
 
@@ -46,7 +48,16 @@ def calculate_length_scores(eeg_data):
 
         scores_per_subject.append(score)
 
-    # Puntaje general del dataset
-    overall_score = np.mean(scores_per_subject)
+    # Puntaje general del dataset basado en todas las sesiones
+    if len(all_session_lengths) > 1:  # Verificar que haya suficientes sesiones para calcular
+        overall_mean_length = np.mean(all_session_lengths)
+        overall_std_length = np.std(all_session_lengths)
+        if overall_mean_length != 0:
+            overall_coefficient_of_variation = overall_std_length / overall_mean_length
+            overall_score = max(0, (1 - overall_coefficient_of_variation)) * 100
+        else:
+            overall_score = 0
+    else:
+        overall_score = 100  # Si hay menos de dos sesiones, no hay variación
 
     return scores_per_subject, overall_score
