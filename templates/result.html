@@ -20,7 +20,7 @@
             <ul class="navbar-links">
                 <li class="rubric-item">
                     <a href="{{ url_for('rubrics_view') }}">Rubric Form</a>
-                    <span class="rubric-score">Puntuación de las rúbricas: {{ rubric_score }}</span>
+                    <span class="rubric-score">Overall puntuation of rubrics {{ results.rubric_score | round(2)}}</span>
                 </li>
                 <li><a href="#">Dashboard</a></li>
                 <li><a href="#">Reports</a></li>
@@ -36,8 +36,17 @@
         <!-- Dimensión 1: Score de Sesiones -->
         <div class="section">
             <div class="section-content">
-                <h3>Overall Session Score:</h3>
-                <p>{{ results.final_score_sessions }}</p>
+                <div class="section-content">
+                    <h3>Overall Session Score:</h3>
+                    <p id="sessionScore">{{ results.final_score_sessions }}</p>
+
+                    <div class="weight-container">
+                        <label for="weightSession" class="weight-label">Weight:</label>
+                        <input type="number" id="weightSession" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+
+                </div>
+
                 <button class="toggle-btn" onclick="toggleDetails('session-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Session Details
                 </button>
@@ -69,8 +78,16 @@
         <!-- Dimensión 2: Score de Longitud de Sesiones -->
         <div class="section">
             <div class="section-content">
-                <h3>Overall Length Score for Dataset:</h3>
-                <p>{{ results.overall_score_length }}</p>
+                <div class="section-content">
+                    <h3>Overall Length Score for Dataset:</h3>
+                    <p id="lengthScore">{{ results.overall_score_length }}</p>
+                    <div class="weight-container">
+                        <label for="weightLength" class="weight-label">Weight:</label>
+                        <input type="number" id="weightLength" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+            
                 <button class="toggle-btn" onclick="toggleDetails('length-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Length Details
                 </button>
@@ -99,8 +116,16 @@
         <!-- Dimensión 3: Análisis de Outliers -->
         <div class="section">
             <div class="section-content">
-                <h3>Outlier Analysis:</h3>
-                <p>Overall Outlier Quality Score: {{ results.final_outlier_score }}</p>
+                <div class="section-content">
+                    <h3>Overall Outlier Score:</h3>
+                    <p id="outlierScore">{{ results.final_outlier_score }}</p>
+                    <div class="weight-container">
+                        <label for="weightOutliers" class="weight-label">Weight:</label>
+                        <input type="number" id="weightOutliers" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+                
                 <button class="toggle-btn" onclick="toggleDetails('outlier-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Outlier Details
                 </button>
@@ -128,8 +153,16 @@
         <!-- Dimensión 4: Análisis de Desbalance de Clases -->
         <div class="section">
             <div class="section-content">
-                <h3>Class Imbalance Analysis:</h3>
-                <p>Overall Class Imbalance Score: {{ results.total_imbalance_score }}</p>
+                <div class="section-content">
+                    <h3>Overall Class Imbalance Score:</h3>
+                    <p id="imbalanceScore">{{ results.total_imbalance_score }}</p>
+                    <div class="weight-container">
+                        <label for="weightImbalance" class="weight-label">Weight:</label>
+                        <input type="number" id="weightImbalance" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+                
                 <button class="toggle-btn" onclick="toggleDetails('imbalance-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Imbalance Details
                 </button>
@@ -159,7 +192,16 @@
             <div class="section-content">
                 <h3>Noise Analysis (SNR and Filtering Efficiency):</h3>
                 <p>Overall SNR for Dataset: {{ results.overall_snr | round(2) }} dB</p>
-                <p>Overall Filtering Efficiency for Dataset: {{ results.overall_filtering_efficiency | round(2)}}%</p>
+                <div class="section-content">
+                    <h3>Overall Filtering Efficiency for Dataset:</h3>
+                    <p id="noiseScore">{{ results.overall_filtering_efficiency | round(2) }}</p>
+                    <div class="weight-container">
+                        <label for="weightNoise" class="weight-label">Weight:</label>
+                        <input type="number" id="weightNoise" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+
                 <button class="toggle-btn" onclick="toggleDetails('noise-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Noise Details
                 </button>
@@ -194,8 +236,16 @@
         <div class="section">
             <!-- Title and Score Section -->
             <div class="section-content">
-                <h3>Class Overlap Analysis:</h3>
-                <p>Overall Class Overlap Score: {{ results.overall_overlap_score }}</p>
+                <div class="section-content">
+                    <h3>Overall Class Overlap Score:</h3>
+                    <p id="overlapScore">{{ results.overall_overlap_score | round(2) }}</p>
+                    <div class="weight-container">
+                        <label for="weightOverlap" class="weight-label">Weight:</label>
+                        <input type="number" id="weightOverlap" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+                
                 <button class="toggle-btn" onclick="toggleDetails('overlap-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Overlap Details
                 </button>
@@ -251,8 +301,16 @@
         <!-- Mutual Information (MI) Analysis -->
         <div class="section">
             <div class="section-content">
-                <h3>Mutual Information (MI) Analysis:</h3>
-                <p>Overall Mutual Information Score: {{ results.overall_mi_score }}</p>
+                <div class="section-content">
+                    <h3>Overall Mutual Information Score:</h3>
+                    <p id="miScore">{{ results.overall_mi_score | round(2) }}</p>
+                    <div class="weight-container">
+                        <label for="weightMI" class="weight-label">Weight:</label>
+                        <input type="number" id="weightMI" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+                
                 <button class="toggle-btn" onclick="toggleDetails('mi-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide MI Details
                 </button>
@@ -306,8 +364,16 @@
 
         <div class="section">
             <div class="section-content">
-                <h3>Homogeneity and Variation Analysis:</h3>
-                <p>Overall Homogeneity Score: {{ results.overall_homogeneity_score | round(2) }}</p>
+                <div class="section-content">
+                    <h3>Overall Homogeneity Score:</h3>
+                    <p id="homogeneityScore">{{ results.overall_homogeneity_score | round(2) }}</p>
+                    <div class="weight-container">
+                        <label for="weightHomogeneity" class="weight-label">Weight:</label>
+                        <input type="number" id="weightHomogeneity" value="1" min="0" step="0.1" class="weight-input">
+                    </div>
+                    
+                </div>
+                
                 <button class="toggle-btn" onclick="toggleDetails('homogeneity-variation-details-container')">
                     <i class="fas fa-info-circle"></i> Show/Hide Details
                 </button>
@@ -348,10 +414,14 @@
         
 
         <!-- Final Score -->
-        <div class="final-score">
-            <h3>Final Score for Dataset:</h3>
-            <p>{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_homogeneity_score + results.overall_mi_score) / 7 }}</p>
+        <div class="final-score-container">
+            <div class="final-score">
+                <h3>Final Score for Dataset:</h3>
+                <p id="finalScore">{{ (results.final_score_sessions + results.overall_score_length + results.final_outlier_score + results.total_imbalance_score + results.overall_overlap_score + results.overall_homogeneity_score + results.overall_mi_score + results.overall_filtering_efficiency) / 8 | round(2)}}</p>
+                <button onclick="recalculateFinalScore()" class="recalculate-btn">Recalculate Final Score</button>
+            </div>
         </div>
+        
         
     </div>
 
@@ -466,6 +536,44 @@
 
 
     };
+
+
+    function recalculateFinalScore() {
+        // Obtén los valores de las puntuaciones y las ponderaciones
+        const scores = {
+            session: parseFloat(document.getElementById('sessionScore').innerText),
+            length: parseFloat(document.getElementById('lengthScore').innerText),
+            outlier: parseFloat(document.getElementById('outlierScore').innerText),
+            imbalance: parseFloat(document.getElementById('imbalanceScore').innerText),
+            overlap: parseFloat(document.getElementById('overlapScore').innerText),
+            homogeneity: parseFloat(document.getElementById('homogeneityScore').innerText),
+            mi: parseFloat(document.getElementById('miScore').innerText),
+            filteringEfficiency: parseFloat(document.getElementById('filteringEfficiencyScore').innerText)
+        };
+
+        const weights = {
+            session: parseFloat(document.getElementById('weightSession').value),
+            length: parseFloat(document.getElementById('weightLength').value),
+            outlier: parseFloat(document.getElementById('weightOutliers').value),
+            imbalance: parseFloat(document.getElementById('weightImbalance').value),
+            overlap: parseFloat(document.getElementById('weightOverlap').value),
+            homogeneity: parseFloat(document.getElementById('weightHomogeneity').value),
+            mi: parseFloat(document.getElementById('weightMI').value),
+            filteringEfficiency: parseFloat(document.getElementById('weightFilteringEfficiency').value) 
+        };
+
+        // Calcula la nueva puntuación final ponderada
+        const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+        const finalScore = Object.keys(scores).reduce(
+            (sum, key) => sum + (scores[key] * weights[key]),
+            0
+        ) / totalWeight;
+
+        // Actualiza la puntuación final en la página
+        document.getElementById('finalScore').innerText = finalScore.toFixed(2);
+    }
+
+
 
     // Asignar eventos a los enlaces
     document.addEventListener("DOMContentLoaded", () => {

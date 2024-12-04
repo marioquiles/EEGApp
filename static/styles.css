@@ -408,3 +408,44 @@ td, th {
     font-family: "Arial", sans-serif;
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+.weight-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.weight-label {
+    font-size: 1em;
+    color: #333;
+    font-weight: bold;
+}
+
+.weight-input {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 1em;
+}
+
+.recalculate-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #2b7a4b;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1em;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.recalculate-btn:hover {
+    background-color: #216a37;
+}

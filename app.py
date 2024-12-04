@@ -15,16 +15,21 @@ processing_status = {}  # Diccionario para mantener el estado del procesamiento 
 file_data = {}  # Diccionario para almacenar datos de archivos subidos (frecuencia, etc.)
 
 
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
+    session.pop('results', None)
     return render_template('index.html')
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'GET':
+        global processing_status
+        processing_status = {}  # Reinicia el diccionario
         return render_template('upload.html')
 
     if request.method == 'POST':
@@ -338,17 +343,24 @@ def results_view(filename):
         # Obtener resultados del diccionario
         if ("results" not in session.keys()):
             results = processing_status.get(f'{filename}_results', {})
-            print("IF")
-            print(results)
             session['results'] = results
+            if(session['rubric_score']):
+                rubric_score = session.get('rubric_score', 0)
+                results["rubric_score"] = rubric_score
+            else:
+                results["rubric_score"] = 0
 
         else:        
             results = session['results'] 
-            print("NO IF")
-            print(results)
+            if(session['rubric_score']):
+                rubric_score = session.get('rubric_score', 0)
+                results["rubric_score"] = rubric_score
+            else:
+                results["rubric_score"] = 0
+
 
         rubric_score = session.get('rubric_score', 0)
-
+        results["rubric_score"] = rubric_score
         # Verificar si `results` contiene las claves necesarias
         return render_template('result.html', filename=filename, results=results)
     elif filename in processing_status and processing_status[filename].startswith('Error'):
