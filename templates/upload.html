@@ -83,46 +83,92 @@
         <h1>Upload EEG Data</h1>
         <p>Select whether to upload one or two datasets and proceed with the upload.</p>
         <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
-            <!-- Single/Comparison selection -->
+            <!-- Checkbox para comparar dos datasets -->
             <div class="file-group">
                 <label>
                     <input type="checkbox" id="compare_datasets" name="compare_datasets">
                     Compare Two Datasets
                 </label>
             </div>
-
-            <!-- File input for Dataset 1 -->
+        
+            <!-- Dataset 1 -->
             <div class="file-group">
-                <label for="file1">Dataset 1:</label>
-                <input type="file" name="file1" id="file1" accept=".pkl" required>
+                <label for="preloaded1">Select Preloaded Dataset 1:</label>
+                <select id="preloaded1" name="preloaded1">
+                    <option value="">-- Choose a preloaded dataset --</option>
+                </select>
+                <label for="file1">Or Upload Dataset 1:</label>
+                <input type="file" name="file1" id="file1" accept=".pkl">
             </div>
-
-            <!-- File input for Dataset 2 (hidden by default) -->
+        
+            <!-- Dataset 2 (visible solo si se compara) -->
             <div id="comparison-section" class="comparison-section">
                 <div class="file-group">
-                    <label for="file2">Dataset 2:</label>
+                    <label for="preloaded2">Select Preloaded Dataset 2:</label>
+                    <select id="preloaded2" name="preloaded2">
+                        <option value="">-- Choose a preloaded dataset --</option>
+                    </select>
+                    <label for="file2">Or Upload Dataset 2:</label>
                     <input type="file" name="file2" id="file2" accept=".pkl">
                 </div>
             </div>
-
-            <input type="submit" value="Upload File(s)">
-        </form>
+        
+            <input type="submit" value="Submit">
+        </form>        
     </div>
 
     <script>
+
+    document.addEventListener('DOMContentLoaded', () => {
         const compareCheckbox = document.getElementById('compare_datasets');
         const comparisonSection = document.getElementById('comparison-section');
-        const file2Input = document.getElementById('file2');
 
+        // Mostrar/ocultar la sección de comparación según el checkbox
         compareCheckbox.addEventListener('change', function () {
             if (this.checked) {
                 comparisonSection.style.display = 'block';
-                file2Input.required = true;
             } else {
                 comparisonSection.style.display = 'none';
-                file2Input.required = false;
             }
         });
+
+        // Cargar datasets precargados en los selects
+        fetch('/datasets')
+            .then(response => response.json())
+            .then(data => {
+                const preloaded1 = document.getElementById('preloaded1');
+                const preloaded2 = document.getElementById('preloaded2');
+
+                if (data.preloaded && data.preloaded.length > 0) {
+                    data.preloaded.forEach(dataset => {
+                        const option1 = document.createElement('option');
+                        option1.value = dataset;
+                        option1.textContent = dataset;
+                        preloaded1.appendChild(option1);
+
+                        const option2 = document.createElement('option');
+                        option2.value = dataset;
+                        option2.textContent = dataset;
+                        preloaded2.appendChild(option2);
+                    });
+                } else {
+                    const noDataOption1 = document.createElement('option');
+                    noDataOption1.value = "";
+                    noDataOption1.textContent = "No preloaded datasets available";
+                    preloaded1.appendChild(noDataOption1);
+
+                    const noDataOption2 = document.createElement('option');
+                    noDataOption2.value = "";
+                    noDataOption2.textContent = "No preloaded datasets available";
+                    preloaded2.appendChild(noDataOption2);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching preloaded datasets:", error);
+            });
+    });
+        
+
     </script>
 </body>
 </html>

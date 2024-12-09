@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Comparison Parameters - NeuroView</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .parameter-form {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-label {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2b3a67;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        #error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .submit-btn {
+            padding: 15px 30px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            font-size: 1.2em;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #2980b9;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="parameter-form">
+        <h1>Set Comparison Parameters for {{ filename }} </h1>
+        <p>You are comparing:</p>
+        <ul>
+            <li><strong>Uploaded Dataset:</strong> {{ filename }}</li>
+            <li><strong>Preloaded Dataset:</strong> {{ preloaded_file }}</li>
+        </ul>
+        <form id="parameter-form" method="POST">
+            <div class="form-group">
+                <label for="sampling_frequency" class="form-label">Sampling Frequency:</label>
+                <input type="number" step="any" name="sampling_frequency" id="sampling_frequency" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="window_size" class="form-label">Window Size:</label>
+                <input type="number" name="window_size" id="window_size" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="overlap" class="form-label">Overlap (0 to Window Size):</label>
+                <input type="number" name="overlap" id="overlap" class="form-input" min="0" required>
+            </div>
+
+            <span id="error-message">Overlap must be less than the window size.</span>
+
+            <div class="form-group">
+                <label for="analysis_type" class="form-label">Analysis Type:</label>
+                <select name="analysis_type" id="analysis_type" class="form-input" required>
+                    <option value="emotions">Emotions</option>
+                    <option value="p300">P300</option>
+                </select>
+            </div>
+            
+            <input type="submit" value="Submit" class="submit-btn">
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('parameter-form').addEventListener('submit', function(event) {
+            const windowSize = parseInt(document.getElementById('window_size').value);
+            const overlap = parseInt(document.getElementById('overlap').value);
+
+            // Validation for overlap
+            if (overlap >= windowSize) {
+                document.getElementById('error-message').style.display = 'inline';
+                event.preventDefault();
+            }
+        });
+
+        // Hide error message when input values change to valid
+        document.getElementById('window_size').addEventListener('input', function() {
+            document.getElementById('error-message').style.display = 'none';
+        });
+
+        document.getElementById('overlap').addEventListener('input', function() {
+            document.getElementById('error-message').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

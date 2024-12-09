@@ -14,7 +14,8 @@ ALLOWED_EXTENSIONS = {'pkl'}
 processing_status = {}  # Diccionario para mantener el estado del procesamiento por archivo
 file_data = {}  # Diccionario para almacenar datos de archivos subidos (frecuencia, etc.)
 
-
+PRECOMPUTED_RESULTS_DIR = "precomputed_results"
+os.makedirs(PRECOMPUTED_RESULTS_DIR, exist_ok=True)
 
 
 def allowed_file(filename):
@@ -25,6 +26,18 @@ def index():
     session.pop('results', None)
     return render_template('index.html')
 
+
+@app.route('/datasets', methods=['GET'])
+def list_datasets():
+    try:
+        preloaded_datasets = [
+            f for f in os.listdir(PRECOMPUTED_RESULTS_DIR) if f.endswith('.pkl')
+        ]
+        return jsonify({'preloaded': preloaded_datasets})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'GET':
@@ -32,46 +45,187 @@ def upload_file():
         processing_status = {}  # Reinicia el diccionario
         return render_template('upload.html')
 
+    results = {}
+
     if request.method == 'POST':
         compare_datasets = 'compare_datasets' in request.form
+        preloaded1 = request.form.get('preloaded1')
+        preloaded2 = request.form.get('preloaded2') if compare_datasets else None
         file1 = request.files.get('file1')
         file2 = request.files.get('file2') if compare_datasets else None
 
-        if not file1 or (compare_datasets and not file2):
-            flash('Please upload the required file(s).')
-            return redirect(request.url)
+        # Caso 1: Todos los datasets son precargados
+        if preloaded1 and (not compare_datasets or (compare_datasets and preloaded2)):
+            # Cargar resultados precargados
+            if preloaded1:
+                filepath1 = os.path.join(PRECOMPUTED_RESULTS_DIR, preloaded1)
+                if os.path.exists(filepath1):
+                    with open(filepath1, 'rb') as f:
+                        results['dataset1'] = {'filename': preloaded1, 'results': pickle.load(f)}
+                else:
+                    flash(f"Preloaded dataset {preloaded1} not found.")
+                    return redirect(request.url)
 
-        # Validate files
-        if not allowed_file(file1.filename) or (compare_datasets and file2 and not allowed_file(file2.filename)):
-            flash('Invalid file type. Only .pkl files are allowed.')
-            return redirect(request.url)
+            if preloaded2:
+                filepath2 = os.path.join(PRECOMPUTED_RESULTS_DIR, preloaded2)
+                if os.path.exists(filepath2):
+                    with open(filepath2, 'rb') as f:
+                        results['dataset2'] = {'filename': preloaded2, 'results': pickle.load(f)}
+                else:
+                    flash(f"Preloaded dataset {preloaded2} not found.")
+                    return redirect(request.url)
 
-        # Save file1
-        filename1 = secure_filename(file1.filename)
-        filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
-        file1.save(filepath1)
+            # Redirigir a la página de resultados precargados
+            if compare_datasets:
+                return render_template('results_compare.html', datasets=results)
+            else:
+                return render_template('result.html', filename=preloaded1, results=results['dataset1']['results'])
 
-        # Register file1 in file_data
-        file_data[filename1] = filepath1
 
-        if compare_datasets:
-            # Save file2
+        # Caso 2: Un dataset subido por el usuario
+        if file1 and not compare_datasets:
+            # Validar archivo subido
+            if not allowed_file(file1.filename):
+                flash('Invalid file type. Only .pkl files are allowed.')
+                return redirect(request.url)
+
+            # Guardar el archivo subido
+            filename1 = secure_filename(file1.filename)
+            filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
+            file1.save(filepath1)
+            file_data[filename1] = filepath1
+
+            # Redirigir a `parameters.html` para leer parámetros del dataset subido
+            return redirect(url_for('parameters', filename=filename1))
+        
+       # Caso 3: Comparación de un dataset subido y uno precargado
+        if (file1 and preloaded2) or (file2 and preloaded1):
+            if file1 and preloaded2:
+                user_file = file1
+                preloaded_file = preloaded2
+            elif file2 and preloaded1:
+                user_file = file2
+                preloaded_file = preloaded1
+
+            # Validar el archivo subido
+            if not allowed_file(user_file.filename):
+                flash('Invalid file type. Only .pkl files are allowed.')
+                return redirect(request.url)
+
+            # Guardar el archivo subido
+            user_filename = secure_filename(user_file.filename)
+            user_filepath = os.path.join(app.config['UPLOAD_FOLDER'], user_filename)
+            user_file.save(user_filepath)
+
+            # Registrar en file_data
+            file_data[user_filename] = user_filepath
+
+            # Redirigir a `get_parameters_for_comparison`
+            return redirect(url_for('get_parameters_for_comparison', filename=user_filename, preloaded_file=preloaded_file))
+
+
+
+        # Caso 4: Dos datasets subidos por el usuario
+        if file1 and file2:
+            # Validar archivos subidos
+            if not allowed_file(file1.filename) or not allowed_file(file2.filename):
+                flash('Invalid file type. Only .pkl files are allowed.')
+                return redirect(request.url)
+
+            # Guardar los archivos subidos
+            filename1 = secure_filename(file1.filename)
+            filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
+            file1.save(filepath1)
+            file_data[filename1] = filepath1
+
             filename2 = secure_filename(file2.filename)
             filepath2 = os.path.join(app.config['UPLOAD_FOLDER'], filename2)
             file2.save(filepath2)
-
-            # Register file2 in file_data
             file_data[filename2] = filepath2
 
-            # Redirect to comparison parameters page
+            # Redirigir a la página de parámetros para comparación
             return redirect(url_for('compare_parameters', file1=filename1, file2=filename2))
 
-        # Redirect to parameters page for single file
-        return redirect(url_for('parameters', filename=filename1))
+        # Si no se cumple ninguna de las condiciones, devolver un mensaje de error
+        flash('Please select or upload the required datasets.')
+        return redirect(request.url)
+
+
+@app.route('/process_comparison_with_preloaded/<file1>/<preloaded_file>', methods=['GET'])
+def process_comparison_with_preloaded(file1, preloaded_file):
+    # Recuperar parámetros del dataset subido desde la sesión
+    compare_params = session.get('compare_params', {})
+    params1 = compare_params.get('params1', {})
+
+    # Construir las rutas de los archivos
+    filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], file1)
+    preloaded_filepath = os.path.join(PRECOMPUTED_RESULTS_DIR, preloaded_file)
+
+    # Diccionario para almacenar resultados
+    results = {}
+
+    # Procesar el dataset subido
+    if params1.get('analysis_type') == 'p300':
+        process_p300_data(filepath1, file1, params1['sampling_frequency'], params1['window_size'], params1['overlap'])
+    else:
+        process_data(filepath1, file1, params1['sampling_frequency'], params1['window_size'], params1['overlap'])
+
+    # Recuperar resultados del dataset subido
+    results['dataset1'] = {
+        'filename': file1,
+        'results': processing_status.get(f'{file1}_results', {})
+    }
+
+    # Recuperar resultados del dataset precargado
+    if os.path.exists(preloaded_filepath):
+        with open(preloaded_filepath, 'rb') as f:
+            preloaded_results = pickle.load(f)
+        results['dataset2'] = {
+            'filename': preloaded_file,
+            'results': preloaded_results
+        }
+    else:
+        return f"Preloaded dataset {preloaded_file} not found.", 404
+
+    # Renderizar la página de comparación
+    return render_template('results_compare.html', datasets=results)
+
+
+@app.route('/get_parameters_for_comparison/<filename>/<preloaded_file>', methods=['GET', 'POST'])
+def get_parameters_for_comparison(filename, preloaded_file):
+    if request.method == 'GET':
+        # Mostrar formulario de parámetros para el dataset subido
+        return render_template('parameters_preloaded.html', filename=filename, preloaded_file=preloaded_file)
+
+    if request.method == 'POST':
+        # Obtener los parámetros del formulario
+        analysis_type = request.form.get('analysis_type')
+        sampling_frequency = float(request.form.get('sampling_frequency', 0))
+        window_size = int(request.form.get('window_size', 0))
+        overlap = float(request.form.get('overlap', 0))
+
+        # Validar solapamiento
+        if overlap >= window_size:
+            flash('Overlap must be less than the window size.')
+            return redirect(url_for('get_parameters_for_comparison', filename=filename, preloaded_file=preloaded_file))
+
+        # Guardar los parámetros en la sesión
+        session['compare_params'] = {
+            'params1': {
+                'analysis_type': analysis_type,
+                'sampling_frequency': sampling_frequency,
+                'window_size': window_size,
+                'overlap': overlap
+            }
+        }
+
+        # Redirigir a `process_comparison_with_preloaded`
+        return redirect(url_for('process_comparison_with_preloaded', file1=filename, preloaded_file=preloaded_file))
 
 
 
-@app.route('/parameters/<filename>', methods=['GET'])
+
+@app.route('/get_parameters/<filename>', methods=['GET'])
 def parameters(filename):
     return render_template('parameters.html', filename=filename)
 
@@ -185,7 +339,7 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
         results = {**session_results, **length_results, **outlier_results, **imbalance_results, **noise_results, 
             'overlap_scores_table': overlap_scores_table, 'overall_overlap_score': overall_overlap_score,
             "overlap_feature_avg": overlap_feature_avg, 'mi_scores_table': mi_scores_table, 'overall_mi_score': mi_overlap_score,
-            'mi_feature_avg': mi_feature_avg, **homogeneity_results}
+            'mi_feature_avg': mi_feature_avg, **homogeneity_results, 'rubric_score': 0}
 
         # Guardar los resultados en el diccionario de estado usando una nueva clave
         processing_status[f'{filename}_results'] = results
@@ -299,7 +453,8 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
             "overall_mi_score": mi_overlap_score,                 # Puntaje general de información mutua
             "mi_scores_table": mi_scores_table,                 # Tabla de puntajes de información mutua
             "mi_feature_avg": mi_feature_avg,                  # Promedio de MI por característica
-            **homogeneity_results
+            **homogeneity_results,
+            'rubric_score': 0
         }
 
         # Save results in the processing status dictionary
@@ -344,23 +499,10 @@ def results_view(filename):
         if ("results" not in session.keys()):
             results = processing_status.get(f'{filename}_results', {})
             session['results'] = results
-            if(session['rubric_score']):
+            if('rubric_score' in session):
                 rubric_score = session.get('rubric_score', 0)
                 results["rubric_score"] = rubric_score
-            else:
-                results["rubric_score"] = 0
 
-        else:        
-            results = session['results'] 
-            if(session['rubric_score']):
-                rubric_score = session.get('rubric_score', 0)
-                results["rubric_score"] = rubric_score
-            else:
-                results["rubric_score"] = 0
-
-
-        rubric_score = session.get('rubric_score', 0)
-        results["rubric_score"] = rubric_score
         # Verificar si `results` contiene las claves necesarias
         return render_template('result.html', filename=filename, results=results)
     elif filename in processing_status and processing_status[filename].startswith('Error'):
