@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 from processing.eeg_processing import process_mutual_information, process_session_metrics, process_length_metrics, process_outlier_metrics, process_labels_metrics, process_eeg_features, process_class_overlap, calculate_mutual_information, calculate_noise, process_homogeneity_and_variation
 from threading import Thread  # Importar Thread para procesamiento en segundo plano
 import pickle
+from pathlib import Path
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './uploads'
@@ -306,8 +308,8 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
         processing_status[filename] = 'Step 6: Calculating class imbalance...'
         imbalance_results = process_labels_metrics(eeg_labels)
 
-        base_filename, _ = os.path.splitext(filename)
-        feature_filepath = f"features/{base_filename}_features.pkl"
+        base_filename = Path(filename).stem
+        feature_filepath = Path("features") / f"{base_filename}_features.pkl"
 
         # Verificar si ya existen las características extraídas
         if os.path.exists(feature_filepath):
@@ -406,14 +408,14 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
         processing_status[filename] = 'Step 3: Calculating window outliers...'
         outlier_results = process_outlier_metrics(eeg_data, window_size, overlap, "p300")
 
-        processing_status[filename] = 'Step 5: Calculating noise metrics (SNR and filtering efficiency)...'
+        processing_status[filename] = 'Step 4: Calculating noise metrics (SNR and filtering efficiency)...'
         noise_results = calculate_noise(eeg_data, sampling_frequency, "p300")  
 
-        processing_status[filename] = 'Step 6: Calculating class imbalance...'
+        processing_status[filename] = 'Step 5: Calculating class imbalance...'
         imbalance_results = process_labels_metrics(eeg_labels)
 
-        base_filename, _ = os.path.splitext(filename)
-        feature_filepath = f"features/{base_filename}_features.pkl"
+        base_filename = Path(filename).stem
+        feature_filepath = Path("features") / f"{base_filename}_features.pkl"
 
         # Verificar si ya existen las características extraídas
         if os.path.exists(feature_filepath):
@@ -422,7 +424,7 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
                 features = pickle.load(f)
         else:
             # Extraer y guardar las características
-            processing_status[filename] = 'Step 5: Extracting features'
+            processing_status[filename] = 'Step 6: Extracting features'
             feature_filepath = process_eeg_features(eeg_data, "p300", filename, sampling_frequency, window_size, overlap)
 
             # Cargar las características después de extraerlas
@@ -436,7 +438,7 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
         processing_status[filename] = 'Step 8: Calculating mutual information...'
         mi_scores_table, mi_overlap_score, mi_feature_avg = process_mutual_information( eeg_labels , features, "p300")
         
-        processing_status[filename] = 'Step 10: Calculating homogeneity and subject variation...'
+        processing_status[filename] = 'Step 9: Calculating homogeneity and subject variation...'
         homogeneity_results = process_homogeneity_and_variation(features, "emotion")
 
         # Combine all results
@@ -456,6 +458,10 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
             **homogeneity_results,
             'rubric_score': 0
         }
+
+
+        with open("MendeleyP300.pkl", 'wb') as archivo:
+            pickle.dump(results, archivo)
 
         # Save results in the processing status dictionary
         processing_status[f'{filename}_results'] = results

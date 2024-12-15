@@ -70,14 +70,18 @@
                     $('#progress-bar').val(30);
                 } else if (data.status === 'Step 3: Calculating window outliers...') {
                     $('#progress-bar').val(40);
-                } else if (data.status === 'Step 5: Calculating noise metrics (SNR and filtering efficiency)...') {
+                } else if (data.status === 'Step 4: Calculating noise metrics (SNR and filtering efficiency)...') {
                     $('#progress-bar').val(50);
-                } else if (data.status === 'Step 6: Calculating class imbalance...') {
+                } else if (data.status === 'Step 5: Calculating class imbalance...') {
                     $('#progress-bar').val(60);
-                } else if (data.status === 'Step 7: Calculating class overlap...') {
+                } else if (data.status === 'Step 6: Extracting features') {
                     $('#progress-bar').val(70);
-                } else if (data.status === 'Step 8: Calculating mutual information...') {
+                } else if (data.status === 'Step 7: Calculating class overlap...') {
                     $('#progress-bar').val(80);
+                } else if (data.status === 'Step 8: Calculating mutual information...') {
+                    $('#progress-bar').val(90);
+                } else if (data.status === 'Step 9: Calculating homogeneity and subject variation...') {
+                    $('#progress-bar').val(95);
                 } else if (data.status === 'Completed') {
                     $('#progress-bar').val(100);
                     setTimeout(function() {

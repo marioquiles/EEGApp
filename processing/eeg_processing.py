@@ -125,8 +125,9 @@ def process_eeg_features(eeg_data, processingType, filename, sampling_rate=128, 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    # Guardar las características extraídas en un archivo
-    feature_filepath = os.path.join(output_folder, filename + "_features")
+    # Separar el nombre base y la extensión
+    base_filename, extension = os.path.splitext(filename)
+    feature_filepath = os.path.join(output_folder, base_filename + "_features" + extension)
     with open(feature_filepath, 'wb') as f:
         pickle.dump(features, f)
 
