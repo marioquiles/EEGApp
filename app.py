@@ -284,9 +284,14 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
         with open(filepath, 'rb') as file:
             data = pickle.load(file)
 
-        # Extraer los datos del diccionario
-        eeg_data = data['eeg_data']
-        eeg_labels = data['eeg_labels']
+        eeg_data = None
+        eeg_labels = None
+
+        for key in data.keys():
+            if "label" in key.lower():  # Buscar claves que contengan 'label'
+                eeg_labels = data[key]
+            elif "data" in key.lower():  # Buscar claves que contengan 'data'
+                eeg_data = data[key]
 
         # Procesar métricas relacionadas con las sesiones
         processing_status[filename] = 'Step 1: Calculating session metrics...'
@@ -301,15 +306,15 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
         outlier_results = process_outlier_metrics(eeg_data, window_size, overlap, "emotion")
         
         # Paso 5: Calcular el ruido (SNR y eficiencia de filtrado)
-        processing_status[filename] = 'Step 5: Calculating noise metrics (SNR and filtering efficiency)...'
+        processing_status[filename] = 'Step 4: Calculating noise metrics (SNR and filtering efficiency)...'
         noise_results = calculate_noise(eeg_data, sampling_frequency)  
 
         # Paso 4: Calcular el desbalance de clases
-        processing_status[filename] = 'Step 6: Calculating class imbalance...'
+        processing_status[filename] = 'Step 5: Calculating class imbalance...'
         imbalance_results = process_labels_metrics(eeg_labels)
 
         base_filename = Path(filename).stem
-        feature_filepath = Path("features") / f"{base_filename}_features.pkl"
+        feature_filepath = Path("features") / f"{base_filename}_ws{window_size}_ol{int(overlap)}_features.pkl"
 
         # Verificar si ya existen las características extraídas
         if os.path.exists(feature_filepath):
@@ -318,7 +323,7 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
                 features = pickle.load(f)
         else:
             # Extraer y guardar las características
-            processing_status[filename] = 'Step 5: Extracting features'
+            processing_status[filename] = 'Step 6: Extracting features'
             feature_filepath = process_eeg_features(eeg_data, "emotions", filename, sampling_frequency, window_size, overlap)
 
             # Cargar las características después de extraerlas
@@ -343,6 +348,9 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
             "overlap_feature_avg": overlap_feature_avg, 'mi_scores_table': mi_scores_table, 'overall_mi_score': mi_overlap_score,
             'mi_feature_avg': mi_feature_avg, **homogeneity_results, 'rubric_score': 0}
 
+        with open("SEED.pkl", "wb") as f:
+            pickle.dump(results, f)
+            
         # Guardar los resultados en el diccionario de estado usando una nueva clave
         processing_status[f'{filename}_results'] = results
         processing_status[filename] = 'Completed'
@@ -393,8 +401,14 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
             data = pickle.load(file)
         
         # Extract EEG data and labels
-        eeg_data = data['eeg_data']
-        eeg_labels = data['eeg_labels']
+        eeg_data = None
+        eeg_labels = None
+
+        for key in data.keys():
+            if "label" in key.lower():  # Buscar claves que contengan 'label'
+                eeg_labels = data[key]
+            elif "data" in key.lower():  # Buscar claves que contengan 'data'
+                eeg_data = data[key]
         
 
         # Step 1: Calculate session metrics (if applicable to P300)
@@ -416,7 +430,7 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
 
         base_filename = Path(filename).stem
         feature_filepath = Path("features") / f"{base_filename}_features.pkl"
-
+        print(feature_filepath)
         # Verificar si ya existen las características extraídas
         if os.path.exists(feature_filepath):
             print(f"Características encontradas en {feature_filepath}. Cargando...")
