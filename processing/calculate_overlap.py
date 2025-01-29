@@ -10,81 +10,68 @@ def bhattacharyya_coefficient(mean_a, std_a, mean_b, std_b):
 def calculate_class_overlap(features, labels):
     overlap_scores_per_subject = {}
 
-    # Iterar sobre cada sujeto
     for subject, sessions in features.items():
-        # Inicializar listas para almacenar las características y etiquetas de todas las ventanas del sujeto
+        print(f"Procesando sujeto: {subject}")
         all_features = []
         all_labels = []
 
-        # Iterar sobre cada sesión del sujeto
+        # Combinar características y etiquetas
         for session, feature_data in sessions.items():
             num_ventanas = feature_data.shape[1]
-            etiqueta = labels[subject][session]  # Obtener la etiqueta para la sesión actual
-
-            # Añadir las características y repetir la etiqueta por el número de ventanas
+            etiqueta = labels[subject][session]
+            print(f"  Procesando sesión: {session} con shape {feature_data.shape} y etiqueta {etiqueta}")
             all_features.append(feature_data)
             all_labels.extend([etiqueta] * num_ventanas)
 
-        # Convertir a arrays de numpy para facilitar el procesamiento
-        all_features = np.concatenate(all_features, axis=1)  # Concatenar por el eje de ventanas
+        all_features = np.concatenate(all_features, axis=1)  # Shape: (n_canales, n_ventanas, n_features)
         all_labels = np.array(all_labels)
 
-        # Obtener las clases únicas y comprobar si hay al menos dos clases
-        unique_classes = np.unique(all_labels)
+        print(f"  Shape combinado de características: {all_features.shape}")
+        print(f"  Total etiquetas combinadas: {all_labels.shape}")
 
+        unique_classes = np.unique(all_labels)
         if len(unique_classes) < 2:
-            print(f"  Advertencia: No hay suficientes clases para calcular el solapamiento.")
+            print(f"Advertencia: No hay suficientes clases para el sujeto {subject}.")
             continue
 
-        # Obtener todas las combinaciones posibles de pares de clases
-        class_pairs = list(combinations(unique_classes, 2))
+        # Inicializar almacenamiento
+        subject_overlap_scores = {i: [] for i in range(all_features.shape[-1])}
 
-        # Inicializar diccionario para almacenar los coeficientes para cada característica
-        subject_overlap_scores = {feature: [] for feature in range(all_features.shape[-1])}
-
-        # Calcular el coeficiente de Bhattacharyya para cada par de clases y cada característica
-        for (class_a, class_b) in class_pairs:
-            # Filtrar las ventanas por cada clase
+        # Calcular solapamiento para cada par de clases
+        for class_a, class_b in combinations(unique_classes, 2):
+            print(f"    Comparando clases: {class_a} vs {class_b}")
             mask_class_a = all_labels == class_a
             mask_class_b = all_labels == class_b
 
             class_a_features = all_features[:, mask_class_a, :]
             class_b_features = all_features[:, mask_class_b, :]
 
-            if class_a_features.size == 0 or class_b_features.size == 0:
-                # Si una clase no tiene suficientes ejemplos, no se puede calcular el coeficiente
-                continue
+            print(f"    Clase {class_a} shape: {class_a_features.shape}, Clase {class_b} shape: {class_b_features.shape}")
 
-            # Calcular la media y desviación estándar para cada característica y clase
-            for feature_index in range(class_a_features.shape[-1]):
-                # Calcular para clase A
-                mean_a = np.mean(class_a_features[:, :, feature_index])
-                std_a = np.std(class_a_features[:, :, feature_index])
+            for feature_index in range(all_features.shape[-1]):
+                # Extraer características
+                a_feat = class_a_features[:, :, feature_index].reshape(-1)
+                b_feat = class_b_features[:, :, feature_index].reshape(-1)
 
-                # Calcular para clase B
-                mean_b = np.mean(class_b_features[:, :, feature_index])
-                std_b = np.std(class_b_features[:, :, feature_index])
+                mean_a, std_a = np.mean(a_feat), np.std(a_feat)
+                mean_b, std_b = np.mean(b_feat), np.std(b_feat)
 
-
-                # Calcular el coeficiente de Bhattacharyya
                 coefficient = bhattacharyya_coefficient(mean_a, std_a, mean_b, std_b)
-
                 subject_overlap_scores[feature_index].append(coefficient)
 
-        # Promediar los coeficientes por característica para el sujeto
-        average_subject_overlap_scores = {feature: np.mean(scores) if len(scores) > 0 else 0
-                                          for feature, scores in subject_overlap_scores.items()}
+        # Promediar coeficientes
+        average_scores = {feature: np.mean(scores) if scores else 0
+                          for feature, scores in subject_overlap_scores.items()}
+        overlap_scores_per_subject[subject] = average_scores
+        print(f"  Puntajes promedio: {average_scores}")
 
-
-        # Guardar los resultados por sujeto
-        overlap_scores_per_subject[subject] = average_subject_overlap_scores
-
-    # Calcular el puntaje general de solapamiento para el dataset
-    all_subject_scores = [np.mean(list(subject_scores.values())) for subject_scores in overlap_scores_per_subject.values()]
-    overall_overlap_score = np.mean(all_subject_scores) if len(all_subject_scores) > 0 else 0
-
+    # Puntaje general
+    overall_scores = [np.mean(list(scores.values())) for scores in overlap_scores_per_subject.values()]
+    overall_overlap_score = np.mean(overall_scores) if overall_scores else 0
+    print(f"Puntaje general: {overall_overlap_score}")
 
     return overlap_scores_per_subject, overall_overlap_score
+
 
 
 def calculate_p300_class_overlap(features, labels):

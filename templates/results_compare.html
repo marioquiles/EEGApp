@@ -105,9 +105,6 @@
             <div class="section-content">
                 <h2>Dataset 1: {{ datasets.dataset1.filename }}</h2>
                 <h3>Overall Outlier Windows Score: {{ datasets.dataset1.results.final_outlier_score }}</h3>
-                <p class="info-text center-text">
-                    <a href="#" class="modal-link" data-dimension="outliers">Learn more about how these values are calculated.</a>
-                </p>  
                 <canvas id="outlierChart1"></canvas>
                 <button class="toggle-btn" onclick="toggleDetails('outlier-details1')">Details</button>
                 <div id="outlier-details1" class="details-container">

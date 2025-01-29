@@ -6,3 +6,5 @@ features/
 processing/__pycache__/calculate_length_scores.cpython-312.pyc
 /processing/__pycache__
 /features
+.DS_Store
+/__pycache__

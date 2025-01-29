@@ -348,7 +348,7 @@ def process_data(filepath, filename, sampling_frequency, window_size, overlap):
             "overlap_feature_avg": overlap_feature_avg, 'mi_scores_table': mi_scores_table, 'overall_mi_score': mi_overlap_score,
             'mi_feature_avg': mi_feature_avg, **homogeneity_results, 'rubric_score': 0}
 
-        with open("SEED.pkl", "wb") as f:
+        with open("Dreamer.pkl", "wb") as f:
             pickle.dump(results, f)
             
         # Guardar los resultados en el diccionario de estado usando una nueva clave
@@ -473,9 +473,6 @@ def process_p300_data(filepath, filename, sampling_frequency, window_size, overl
             'rubric_score': 0
         }
 
-
-        with open("MendeleyP300.pkl", 'wb') as archivo:
-            pickle.dump(results, archivo)
 
         # Save results in the processing status dictionary
         processing_status[f'{filename}_results'] = results

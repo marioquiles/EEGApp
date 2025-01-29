@@ -127,7 +127,8 @@ def process_eeg_features(eeg_data, processingType, filename, sampling_rate=128, 
 
     # Separar el nombre base y la extensión
     base_filename, extension = os.path.splitext(filename)
-    feature_filepath = os.path.join(output_folder, base_filename + "_features" + extension)
+    feature_filepath = os.path.join(output_folder, base_filename + "_ws" + str(window_size) + "_ol" + str(int(overlap)) + "_features" + extension)
+    print(feature_filepath)
     with open(feature_filepath, 'wb') as f:
         pickle.dump(features, f)
 
