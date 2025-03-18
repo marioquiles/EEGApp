@@ -74,92 +74,96 @@ def calculate_class_overlap(features, labels):
 
 
 
-def calculate_p300_class_overlap(features, labels):
-    overlap_scores_per_subject = {}
+def calculate_p300_class_overlap(features, labels, log_file="debug_log.txt"):
+    with open(log_file, "w", encoding="utf-8") as log:
+        def log_print(message):
+            print(message)  # Muestra en pantalla
+            log.write(message + "\n")  # Guarda en archivo
 
-    # Iterar sobre cada sujeto
-    for subject, sessions in features.items():
-        print(f"\nProcesando sujeto: {subject}")
-        all_features = []
-        all_labels = []
+        overlap_scores_per_subject = {}
 
-        # Iterar sobre cada sesión del sujeto
-        for session, feature_data in sessions.items():
-            print(f"\n  Procesando sesión: {session}")
-            print(f"  Dimensiones de características (feature_data): {feature_data.shape}")
-            session_labels = labels[subject][session]  # Obtener etiquetas para la sesión actual
-            print(f"  Número de etiquetas disponibles: {len(session_labels)}")
-            num_windows = feature_data.shape[1]
-            print(f"  Número de ventanas en características: {num_windows}")
+        for subject, sessions in features.items():
+            log_print(f"\n🔹 Procesando sujeto: {subject}")
+            all_features = []
+            all_labels = []
 
-            # Verifica que el número de etiquetas coincida con el número de ventanas
-            if len(session_labels) != num_windows:
-                print(f"  Advertencia: El número de etiquetas no coincide con el número de ventanas para {subject}, {session}.")
-                continue  # Saltar esta sesión si hay un desajuste
+            for session, feature_data in sessions.items():
+                log_print(f"\nProcesando sesión: {session}")
+                log_print(f"Dimensiones de características: {feature_data.shape}")
+                session_labels = labels[subject][session]
+                log_print(f" Número de etiquetas disponibles: {len(session_labels)}")
+                num_windows = feature_data.shape[1]
+                log_print(f" Número de ventanas en características: {num_windows}")
 
-            # Añadir características y etiquetas
-            all_features.append(feature_data)
-            all_labels.extend(session_labels)
+                if len(session_labels) != num_windows:
+                    log_print(f"Advertencia: El número de etiquetas no coincide con las ventanas.")
+                    continue
 
-        # Verificar si hay datos acumulados
-        if not all_features or not all_labels:
-            print(f"  Advertencia: No hay datos válidos acumulados para el sujeto {subject}.")
-            continue
+                all_features.append(feature_data)
+                all_labels.extend(session_labels)
 
-        # Convertir a arrays de numpy
-        all_features = np.concatenate(all_features, axis=1)  # Concatenar por el eje de ventanas
-        all_labels = np.array(all_labels)
-        print(f"\n  Dimensiones después de concatenar características: {all_features.shape}")
-        print(f"  Número total de etiquetas acumuladas: {len(all_labels)}")
-
-        # Verificar que el tamaño de all_labels coincida con el eje de ventanas en all_features
-        if all_features.shape[1] != len(all_labels):
-            print(f"  Error: El número de ventanas en las características no coincide con el número de etiquetas para el sujeto {subject}.")
-            continue
-
-        # Proceder con el cálculo si las dimensiones son consistentes
-        unique_classes = np.unique(all_labels)
-        print(f"  Clases únicas detectadas: {unique_classes}")
-        if len(unique_classes) < 2:
-            print(f"  Advertencia: No hay suficientes clases para el sujeto {subject}.")
-            continue
-
-        # Obtener pares de clases
-        class_pairs = list(combinations(unique_classes, 2))
-        subject_overlap_scores = {feature: [] for feature in range(all_features.shape[-1])}
-
-        for (class_a, class_b) in class_pairs:
-            print(f"    Comparando clases: {class_a} vs {class_b}")
-            mask_class_a = all_labels == class_a
-            mask_class_b = all_labels == class_b
-
-            class_a_features = all_features[:, mask_class_a, :]
-            class_b_features = all_features[:, mask_class_b, :]
-
-            print(f"    Dimensiones de características clase {class_a}: {class_a_features.shape}")
-            print(f"    Dimensiones de características clase {class_b}: {class_b_features.shape}")
-
-            if class_a_features.size == 0 or class_b_features.size == 0:
-                print(f"    Advertencia: Una de las clases no tiene suficientes datos.")
+            if not all_features or not all_labels:
+                log_print(f"Advertencia: No hay datos válidos para {subject}.")
                 continue
 
-            # Calcular para cada característica
-            for feature_index in range(class_a_features.shape[-1]):
-                mean_a = np.mean(class_a_features[:, :, feature_index])
-                std_a = np.std(class_a_features[:, :, feature_index])
-                mean_b = np.mean(class_b_features[:, :, feature_index])
-                std_b = np.std(class_b_features[:, :, feature_index])
+            all_features = np.concatenate(all_features, axis=1)
+            all_labels = np.array(all_labels)
+            log_print(f"\nDimensiones concatenadas: {all_features.shape}")
+            log_print(f"Número total de etiquetas: {len(all_labels)}")
 
-                coefficient = bhattacharyya_coefficient(mean_a, std_a, mean_b, std_b)
-                subject_overlap_scores[feature_index].append(coefficient)
+            if all_features.shape[1] != len(all_labels):
+                log_print(f"Error: Desajuste entre ventanas y etiquetas.")
+                continue
 
-        average_subject_overlap_scores = {feature: np.mean(scores) if scores else 0
-                                          for feature, scores in subject_overlap_scores.items()}
-        overlap_scores_per_subject[subject] = average_subject_overlap_scores
-        print(f"  Puntajes promedio de solapamiento para el sujeto {subject}: {average_subject_overlap_scores}")
+            unique_classes = np.unique(all_labels)
+            log_print(f"Clases únicas detectadas: {unique_classes}")
+            if len(unique_classes) < 2:
+                log_print(f"Advertencia: No hay suficientes clases en {subject}.")
+                continue
 
-    all_subject_scores = [np.mean(list(subject_scores.values())) for subject_scores in overlap_scores_per_subject.values()]
-    overall_overlap_score = np.mean(all_subject_scores) if all_subject_scores else 0
-    print(f"\nPuntaje general de solapamiento: {overall_overlap_score}")
+            class_pairs = list(combinations(unique_classes, 2))
+            subject_overlap_scores = {feature: [] for feature in range(all_features.shape[-1])}
+
+            for (class_a, class_b) in class_pairs:
+                log_print(f"Comparando clases: {class_a} vs {class_b}")
+                mask_class_a = all_labels == class_a
+                mask_class_b = all_labels == class_b
+
+                class_a_features = all_features[:, mask_class_a, :]
+                class_b_features = all_features[:, mask_class_b, :]
+
+                log_print(f"Clase {class_a}: {class_a_features.shape}")
+                log_print(f"Clase {class_b}: {class_b_features.shape}")
+
+                if class_a_features.size == 0 or class_b_features.size == 0:
+                    log_print(f"Advertencia: Una de las clases no tiene suficientes datos.")
+                    continue
+
+                for feature_index in range(class_a_features.shape[-1]):
+                    mean_a = np.mean(class_a_features[:, :, feature_index])
+                    std_a = np.std(class_a_features[:, :, feature_index])
+                    mean_b = np.mean(class_b_features[:, :, feature_index])
+                    std_b = np.std(class_b_features[:, :, feature_index])
+
+                    log_print(f"Feature {feature_index}: Mean A = {mean_a:.4f}, Std A = {std_a:.4f}")
+                    log_print(f"Feature {feature_index}: Mean B = {mean_b:.4f}, Std B = {std_b:.4f}")
+
+                    if std_a < 1e-6 or std_b < 1e-6:
+                        log_print(f"Advertencia: Baja desviación estándar en Feature {feature_index}.")
+
+                    coefficient = bhattacharyya_coefficient(mean_a, std_a, mean_b, std_b)
+                    log_print(f"Coeficiente Bhattacharyya (Feature {feature_index}): {coefficient:.4f}")
+
+                    subject_overlap_scores[feature_index].append(coefficient)
+
+            average_subject_overlap_scores = {
+                feature: np.mean(scores) if scores else 0 for feature, scores in subject_overlap_scores.items()
+            }
+            overlap_scores_per_subject[subject] = average_subject_overlap_scores
+            log_print(f"Puntajes promedio de solapamiento para {subject}: {average_subject_overlap_scores}")
+
+        all_subject_scores = [np.mean(list(subject_scores.values())) for subject_scores in overlap_scores_per_subject.values()]
+        overall_overlap_score = np.mean(all_subject_scores) if all_subject_scores else 0
+        log_print(f"\nPuntaje general de solapamiento: {overall_overlap_score:.4f}")
 
     return overlap_scores_per_subject, overall_overlap_score

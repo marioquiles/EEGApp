@@ -145,8 +145,7 @@ def process_class_overlap(eeg_labels, analysis_type, features=None):
         features (dict): Características extraídas previamente, si ya se extrajeron.
 
     Retorna:
-        overlap_scores_table (list): Lista de listas que contiene los puntajes de solapamiento por característica y sujeto.
-                                     Cada lista interna tiene la forma [sujeto, score_feature_0, score_feature_1, ...].
+        overlap_scores_table (list): Lista de listas con los puntajes de solapamiento por característica y sujeto.
         overall_overlap_score (float): Puntaje de solapamiento general del dataset.
         overlap_feature_avg (list): Lista con los promedios de solapamiento por característica.
     """
@@ -157,12 +156,26 @@ def process_class_overlap(eeg_labels, analysis_type, features=None):
     else:
         raise ValueError(f"Analysis type '{analysis_type}' is not supported.")
 
-    # Limitar los scores entre 0 y 1
-    for subject, scores in overlap_scores_per_subject.items():
-        overlap_scores_per_subject[subject] = {feature: max(0, min(1, score)) for feature, score in scores.items()}
+    print(f"\n🔍 Original Overall Overlap Score: {overall_overlap_score}")
 
-    overall_overlap_score = max(0, min(1, overall_overlap_score))
-    overall_overlap_score = (1 - overall_overlap_score) * 100
+    # Normalización antes de forzar a [0,1]
+    max_overlap = max(
+        max(scores.values(), default=0) for scores in overlap_scores_per_subject.values()
+    ) if overlap_scores_per_subject else 1  # Evitar división por 0
+
+    print(f"🔹 Máximo overlap antes de normalizar: {max_overlap}")
+
+    for subject, scores in overlap_scores_per_subject.items():
+        overlap_scores_per_subject[subject] = {
+            feature: max(0, min(1, score / max_overlap))  # Normalizar primero
+            for feature, score in scores.items()
+        }
+    
+    overall_overlap_score = max(0, min(1, overall_overlap_score / max_overlap))  # Normalizar general
+    print(f"🔍 Normalized Overall Overlap Score: {overall_overlap_score}")
+
+    overall_overlap_score = (1 - overall_overlap_score) * 100  # Transformación final
+    print(f"🚀 Final Overall Overlap Score: {overall_overlap_score}")
 
     overlap_scores_table = []
     for subject, scores in overlap_scores_per_subject.items():
@@ -174,6 +187,7 @@ def process_class_overlap(eeg_labels, analysis_type, features=None):
     ]
 
     return overlap_scores_table, overall_overlap_score, overlap_feature_avg
+
 
 
 def process_mutual_information(eeg_labels, features=None, analysis_type="emotion"):
