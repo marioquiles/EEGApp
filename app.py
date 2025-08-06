@@ -532,55 +532,55 @@ def results_view(filename):
 @app.route('/rubrics', methods=['GET', 'POST'])
 def rubrics_view():
     if request.method == 'POST':
-        # Recoger los datos enviados desde el formulario, convertir a 0 si está vacío
-        metadata_subject_info = float(request.form.get('metadata_subject_info', 0) or 0)
-        metadata_electrode_config = float(request.form.get('metadata_electrode_config', 0) or 0)
-        metadata_experimental_conditions = float(request.form.get('metadata_experimental_conditions', 0) or 0)
-        metadata_recording_procedure = float(request.form.get('metadata_recording_procedure', 0) or 0)
-        metadata_consistency = float(request.form.get('metadata_consistency', 0) or 0)
+        # Lista de campos tal y como aparecen en el HTML (17 ítems)
+        field_names = [
+            # Metadata Evaluation
+            'metadata_subject_info', 'metadata_electrode_config',
+            'metadata_experimental_conditions', 'metadata_recording_procedure',
+            'metadata_consistency',
+            # Format Validation
+            'format_data_format', 'format_standardization',
+            'format_conversion', 'format_accessibility',
+            # Data Accessibility
+            'data_compatibility', 'data_import_libraries',
+            'data_loading_ease', 'data_documentation',
+            # Relevance
+            'relevance_objectives', 'relevance_clinical_coverage',
+            'relevance_data_specificity', 'relevance_diversity'
+        ]
 
-        format_data_format = float(request.form.get('format_data_format', 0) or 0)
-        format_standardization = float(request.form.get('format_standardization', 0) or 0)
-        format_conversion = float(request.form.get('format_conversion', 0) or 0)
-        format_accessibility = float(request.form.get('format_accessibility', 0) or 0)
+        raw_values = []
+        for name in field_names:
+            v = request.form.get(name, '').strip()
+            # Acepta solo 1..5; ignora vacíos o valores inválidos
+            try:
+                iv = int(v)
+                if 1 <= iv <= 5:
+                    raw_values.append(iv)
+            except ValueError:
+                pass  # vacío o no numérico => se ignora
 
-        data_compatibility = float(request.form.get('data_compatibility', 0) or 0)
-        data_import_libraries = float(request.form.get('data_import_libraries', 0) or 0)
-        data_loading_ease = float(request.form.get('data_loading_ease', 0) or 0)
-        data_documentation = float(request.form.get('data_documentation', 0) or 0)
+        total_items = len(field_names)
+        answered = len(raw_values)
 
-        relevance_objectives = float(request.form.get('relevance_objectives', 0) or 0)
-        relevance_clinical_coverage = float(request.form.get('relevance_clinical_coverage', 0) or 0)
-        relevance_data_specificity = float(request.form.get('relevance_data_specificity', 0) or 0)
-        relevance_diversity = float(request.form.get('relevance_diversity', 0) or 0)
+        if answered == 0:
+            final_score = 0.0
+        else:
+            # Normaliza cada ítem: 1->0, 5->100 y promedia
+            normalized = [ (iv - 1) / 4 * 100.0 for iv in raw_values ]
+            final_score = sum(normalized) / answered
 
-        # Sumar los valores de cada rúbrica
-        total_metadata_score = (metadata_subject_info + metadata_electrode_config +
-                                metadata_experimental_conditions + metadata_recording_procedure + metadata_consistency)
+        # (Opcional) guarda cobertura para mostrar aviso si es baja
+        coverage = answered / total_items if total_items else 0.0
+        session['rubric_coverage'] = round(coverage * 100, 1)
 
-        total_format_score = (format_data_format + format_standardization +
-                              format_conversion + format_accessibility)
+        session['rubric_score'] = round(final_score, 2)
 
-        total_data_accessibility_score = (data_compatibility + data_import_libraries +
-                                          data_loading_ease + data_documentation)
+        return redirect(url_for('results_view', filename=session.get("filename", "")))
 
-        total_relevance_score = (relevance_objectives + relevance_clinical_coverage +
-                                 relevance_data_specificity + relevance_diversity)
-
-        # Sumar todas las rúbricas
-        total_score = total_metadata_score + total_format_score + total_data_accessibility_score + total_relevance_score
-
-        # Calcular la puntuación final sobre 100 (el total máximo es 25)
-        final_score = (total_score / 25) * 100
-
-        # Guardar la puntuación en session para poder usarla en la vista de resultados
-        session['rubric_score'] = final_score
-
-        # Redirigir a la página de resultados, pasando la puntuación final
-        return redirect(url_for('results_view', filename= session["filename"]))
-
-    # Mostrar el formulario para rellenar las rúbricas
+    # GET -> render del formulario
     return render_template('rubrics.html')
+
 
 
 @app.route('/process_comparison_results/<file1>/<file2>', methods=['GET'])

@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rubrics Evaluation</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+      .scale { display: flex; gap: 10px; margin: 6px 0 14px; flex-wrap: wrap; }
+      .scale label { display: inline-flex; align-items: center; gap: 4px; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -13,66 +17,168 @@
         <form action="{{ url_for('rubrics_view') }}" method="POST">
             <!-- Rúbrica 1: Metadata Evaluation -->
             <h3>Metadata Evaluation</h3>
-            <label for="metadata_subject_info">Subject information (age, sex, health status, etc.):</label>
-            <input type="number" step="0.1" id="metadata_subject_info" name="metadata_subject_info" max="0.5">
-            <br>
-            <label for="metadata_electrode_config">Electrode configuration (location, type, etc.):</label>
-            <input type="number" step="0.1" id="metadata_electrode_config" name="metadata_electrode_config" max="1">
-            <br>
-            <label for="metadata_experimental_conditions">Experimental conditions (task performed, environment, etc.):</label>
-            <input type="number" step="0.1" id="metadata_experimental_conditions" name="metadata_experimental_conditions" max="1">
-            <br>
-            <label for="metadata_recording_procedure">Recording procedure (duration, equipment settings, etc.):</label>
-            <input type="number" step="0.1" id="metadata_recording_procedure" name="metadata_recording_procedure" max="1">
-            <br>
-            <label for="metadata_consistency">Consistency and coherence of information:</label>
-            <input type="number" step="0.1" id="metadata_consistency" name="metadata_consistency" max="1.5">
-            <br>
+
+            <label for="metadata_subject_info_1">Subject information (age, sex, health status, etc.):</label>
+            <div class="scale">
+              <label><input type="radio" id="metadata_subject_info_1" name="metadata_subject_info" value="1">1</label>
+              <label><input type="radio" id="metadata_subject_info_2" name="metadata_subject_info" value="2">2</label>
+              <label><input type="radio" id="metadata_subject_info_3" name="metadata_subject_info" value="3">3</label>
+              <label><input type="radio" id="metadata_subject_info_4" name="metadata_subject_info" value="4">4</label>
+              <label><input type="radio" id="metadata_subject_info_5" name="metadata_subject_info" value="5">5</label>
+            </div>
+
+            <label for="metadata_electrode_config_1">Electrode configuration (location, type, etc.):</label>
+            <div class="scale">
+              <label><input type="radio" id="metadata_electrode_config_1" name="metadata_electrode_config" value="1">1</label>
+              <label><input type="radio" id="metadata_electrode_config_2" name="metadata_electrode_config" value="2">2</label>
+              <label><input type="radio" id="metadata_electrode_config_3" name="metadata_electrode_config" value="3">3</label>
+              <label><input type="radio" id="metadata_electrode_config_4" name="metadata_electrode_config" value="4">4</label>
+              <label><input type="radio" id="metadata_electrode_config_5" name="metadata_electrode_config" value="5">5</label>
+            </div>
+
+            <label for="metadata_experimental_conditions_1">Experimental conditions (task performed, environment, etc.):</label>
+            <div class="scale">
+              <label><input type="radio" id="metadata_experimental_conditions_1" name="metadata_experimental_conditions" value="1">1</label>
+              <label><input type="radio" id="metadata_experimental_conditions_2" name="metadata_experimental_conditions" value="2">2</label>
+              <label><input type="radio" id="metadata_experimental_conditions_3" name="metadata_experimental_conditions" value="3">3</label>
+              <label><input type="radio" id="metadata_experimental_conditions_4" name="metadata_experimental_conditions" value="4">4</label>
+              <label><input type="radio" id="metadata_experimental_conditions_5" name="metadata_experimental_conditions" value="5">5</label>
+            </div>
+
+            <label for="metadata_recording_procedure_1">Recording procedure (duration, equipment settings, etc.):</label>
+            <div class="scale">
+              <label><input type="radio" id="metadata_recording_procedure_1" name="metadata_recording_procedure" value="1">1</label>
+              <label><input type="radio" id="metadata_recording_procedure_2" name="metadata_recording_procedure" value="2">2</label>
+              <label><input type="radio" id="metadata_recording_procedure_3" name="metadata_recording_procedure" value="3">3</label>
+              <label><input type="radio" id="metadata_recording_procedure_4" name="metadata_recording_procedure" value="4">4</label>
+              <label><input type="radio" id="metadata_recording_procedure_5" name="metadata_recording_procedure" value="5">5</label>
+            </div>
+
+            <label for="metadata_consistency_1">Consistency and coherence of information:</label>
+            <div class="scale">
+              <label><input type="radio" id="metadata_consistency_1" name="metadata_consistency" value="1">1</label>
+              <label><input type="radio" id="metadata_consistency_2" name="metadata_consistency" value="2">2</label>
+              <label><input type="radio" id="metadata_consistency_3" name="metadata_consistency" value="3">3</label>
+              <label><input type="radio" id="metadata_consistency_4" name="metadata_consistency" value="4">4</label>
+              <label><input type="radio" id="metadata_consistency_5" name="metadata_consistency" value="5">5</label>
+            </div>
 
             <!-- Rúbrica 2: Format Validation -->
             <h3>Format Validation</h3>
-            <label for="format_data_format">Data format (e.g. microvolts for EEG):</label>
-            <input type="number" step="0.1" id="format_data_format" name="format_data_format" max="1.5">
-            <br>
-            <label for="format_standardization">Format standardization (e.g. EDF, CSV):</label>
-            <input type="number" step="0.1" id="format_standardization" name="format_standardization" max="1.5">
-            <br>
-            <label for="format_conversion">Ease of converting the format (if not standardized):</label>
-            <input type="number" step="0.1" id="format_conversion" name="format_conversion" max="1">
-            <br>
-            <label for="format_accessibility">Accessibility in common analysis tools (e.g. MNE, EEGLAB):</label>
-            <input type="number" step="0.1" id="format_accessibility" name="format_accessibility" max="1">
-            <br>
+
+            <label for="format_data_format_1">Data format (e.g. microvolts for EEG):</label>
+            <div class="scale">
+              <label><input type="radio" id="format_data_format_1" name="format_data_format" value="1">1</label>
+              <label><input type="radio" id="format_data_format_2" name="format_data_format" value="2">2</label>
+              <label><input type="radio" id="format_data_format_3" name="format_data_format" value="3">3</label>
+              <label><input type="radio" id="format_data_format_4" name="format_data_format" value="4">4</label>
+              <label><input type="radio" id="format_data_format_5" name="format_data_format" value="5">5</label>
+            </div>
+
+            <label for="format_standardization_1">Format standardization (e.g. EDF, CSV):</label>
+            <div class="scale">
+              <label><input type="radio" id="format_standardization_1" name="format_standardization" value="1">1</label>
+              <label><input type="radio" id="format_standardization_2" name="format_standardization" value="2">2</label>
+              <label><input type="radio" id="format_standardization_3" name="format_standardization" value="3">3</label>
+              <label><input type="radio" id="format_standardization_4" name="format_standardization" value="4">4</label>
+              <label><input type="radio" id="format_standardization_5" name="format_standardization" value="5">5</label>
+            </div>
+
+            <label for="format_conversion_1">Ease of converting the format (if not standardized):</label>
+            <div class="scale">
+              <label><input type="radio" id="format_conversion_1" name="format_conversion" value="1">1</label>
+              <label><input type="radio" id="format_conversion_2" name="format_conversion" value="2">2</label>
+              <label><input type="radio" id="format_conversion_3" name="format_conversion" value="3">3</label>
+              <label><input type="radio" id="format_conversion_4" name="format_conversion" value="4">4</label>
+              <label><input type="radio" id="format_conversion_5" name="format_conversion" value="5">5</label>
+            </div>
+
+            <label for="format_accessibility_1">Accessibility in common analysis tools (e.g. MNE, EEGLAB):</label>
+            <div class="scale">
+              <label><input type="radio" id="format_accessibility_1" name="format_accessibility" value="1">1</label>
+              <label><input type="radio" id="format_accessibility_2" name="format_accessibility" value="2">2</label>
+              <label><input type="radio" id="format_accessibility_3" name="format_accessibility" value="3">3</label>
+              <label><input type="radio" id="format_accessibility_4" name="format_accessibility" value="4">4</label>
+              <label><input type="radio" id="format_accessibility_5" name="format_accessibility" value="5">5</label>
+            </div>
 
             <!-- Rúbrica 3: Data Accessibility -->
             <h3>Data Accessibility</h3>
-            <label for="data_compatibility">Compatibility with analysis software (e.g. MNE, EEGLAB):</label>
-            <input type="number" step="0.1" id="data_compatibility" name="data_compatibility" max="1.5">
-            <br>
-            <label for="data_import_libraries">Import libraries available (e.g. Python, MATLAB):</label>
-            <input type="number" step="0.1" id="data_import_libraries" name="data_import_libraries" max="1.5">
-            <br>
-            <label for="data_loading_ease">Ease of data loading (scripts available):</label>
-            <input type="number" step="0.1" id="data_loading_ease" name="data_loading_ease" max="1">
-            <br>
-            <label for="data_documentation">Documentation and examples available:</label>
-            <input type="number" step="0.1" id="data_documentation" name="data_documentation" max="1">
-            <br>
+
+            <label for="data_compatibility_1">Compatibility with analysis software (e.g. MNE, EEGLAB):</label>
+            <div class="scale">
+              <label><input type="radio" id="data_compatibility_1" name="data_compatibility" value="1">1</label>
+              <label><input type="radio" id="data_compatibility_2" name="data_compatibility" value="2">2</label>
+              <label><input type="radio" id="data_compatibility_3" name="data_compatibility" value="3">3</label>
+              <label><input type="radio" id="data_compatibility_4" name="data_compatibility" value="4">4</label>
+              <label><input type="radio" id="data_compatibility_5" name="data_compatibility" value="5">5</label>
+            </div>
+
+            <label for="data_import_libraries_1">Import libraries available (e.g. Python, MATLAB):</label>
+            <div class="scale">
+              <label><input type="radio" id="data_import_libraries_1" name="data_import_libraries" value="1">1</label>
+              <label><input type="radio" id="data_import_libraries_2" name="data_import_libraries" value="2">2</label>
+              <label><input type="radio" id="data_import_libraries_3" name="data_import_libraries" value="3">3</label>
+              <label><input type="radio" id="data_import_libraries_4" name="data_import_libraries" value="4">4</label>
+              <label><input type="radio" id="data_import_libraries_5" name="data_import_libraries" value="5">5</label>
+            </div>
+
+            <label for="data_loading_ease_1">Ease of data loading (scripts available):</label>
+            <div class="scale">
+              <label><input type="radio" id="data_loading_ease_1" name="data_loading_ease" value="1">1</label>
+              <label><input type="radio" id="data_loading_ease_2" name="data_loading_ease" value="2">2</label>
+              <label><input type="radio" id="data_loading_ease_3" name="data_loading_ease" value="3">3</label>
+              <label><input type="radio" id="data_loading_ease_4" name="data_loading_ease" value="4">4</label>
+              <label><input type="radio" id="data_loading_ease_5" name="data_loading_ease" value="5">5</label>
+            </div>
+
+            <label for="data_documentation_1">Documentation and examples available:</label>
+            <div class="scale">
+              <label><input type="radio" id="data_documentation_1" name="data_documentation" value="1">1</label>
+              <label><input type="radio" id="data_documentation_2" name="data_documentation" value="2">2</label>
+              <label><input type="radio" id="data_documentation_3" name="data_documentation" value="3">3</label>
+              <label><input type="radio" id="data_documentation_4" name="data_documentation" value="4">4</label>
+              <label><input type="radio" id="data_documentation_5" name="data_documentation" value="5">5</label>
+            </div>
 
             <!-- Rúbrica 4: Relevance Evaluation -->
             <h3>Evaluation of Relevance and Relevance</h3>
-            <label for="relevance_objectives">Relevance to study objectives:</label>
-            <input type="number" step="0.1" id="relevance_objectives" name="relevance_objectives" max="1.5">
-            <br>
-            <label for="relevance_clinical_coverage">Coverage of necessary clinical conditions:</label>
-            <input type="number" step="0.1" id="relevance_clinical_coverage" name="relevance_clinical_coverage" max="1.5">
-            <br>
-            <label for="relevance_data_specificity">Level of detail and specificity of the data:</label>
-            <input type="number" step="0.1" id="relevance_data_specificity" name="relevance_data_specificity" max="1">
-            <br>
-            <label for="relevance_diversity">Diversity and representativeness of subjects:</label>
-            <input type="number" step="0.1" id="relevance_diversity" name="relevance_diversity" max="1">
-            <br>
+
+            <label for="relevance_objectives_1">Relevance to study objectives:</label>
+            <div class="scale">
+              <label><input type="radio" id="relevance_objectives_1" name="relevance_objectives" value="1">1</label>
+              <label><input type="radio" id="relevance_objectives_2" name="relevance_objectives" value="2">2</label>
+              <label><input type="radio" id="relevance_objectives_3" name="relevance_objectives" value="3">3</label>
+              <label><input type="radio" id="relevance_objectives_4" name="relevance_objectives" value="4">4</label>
+              <label><input type="radio" id="relevance_objectives_5" name="relevance_objectives" value="5">5</label>
+            </div>
+
+            <label for="relevance_clinical_coverage_1">Coverage of necessary clinical conditions:</label>
+            <div class="scale">
+              <label><input type="radio" id="relevance_clinical_coverage_1" name="relevance_clinical_coverage" value="1">1</label>
+              <label><input type="radio" id="relevance_clinical_coverage_2" name="relevance_clinical_coverage" value="2">2</label>
+              <label><input type="radio" id="relevance_clinical_coverage_3" name="relevance_clinical_coverage" value="3">3</label>
+              <label><input type="radio" id="relevance_clinical_coverage_4" name="relevance_clinical_coverage" value="4">4</label>
+              <label><input type="radio" id="relevance_clinical_coverage_5" name="relevance_clinical_coverage" value="5">5</label>
+            </div>
+
+            <label for="relevance_data_specificity_1">Level of detail and specificity of the data:</label>
+            <div class="scale">
+              <label><input type="radio" id="relevance_data_specificity_1" name="relevance_data_specificity" value="1">1</label>
+              <label><input type="radio" id="relevance_data_specificity_2" name="relevance_data_specificity" value="2">2</label>
+              <label><input type="radio" id="relevance_data_specificity_3" name="relevance_data_specificity" value="3">3</label>
+              <label><input type="radio" id="relevance_data_specificity_4" name="relevance_data_specificity" value="4">4</label>
+              <label><input type="radio" id="relevance_data_specificity_5" name="relevance_data_specificity" value="5">5</label>
+            </div>
+
+            <label for="relevance_diversity_1">Diversity and representativeness of subjects:</label>
+            <div class="scale">
+              <label><input type="radio" id="relevance_diversity_1" name="relevance_diversity" value="1">1</label>
+              <label><input type="radio" id="relevance_diversity_2" name="relevance_diversity" value="2">2</label>
+              <label><input type="radio" id="relevance_diversity_3" name="relevance_diversity" value="3">3</label>
+              <label><input type="radio" id="relevance_diversity_4" name="relevance_diversity" value="4">4</label>
+              <label><input type="radio" id="relevance_diversity_5" name="relevance_diversity" value="5">5</label>
+            </div>
 
             <!-- Botón para enviar el formulario -->
             <button type="submit">Submit Rubric Scores</button>

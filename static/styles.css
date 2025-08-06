@@ -449,3 +449,22 @@ td, th {
 .recalculate-btn:hover {
     background-color: #216a37;
 }
+
+/* Centrar títulos, etiquetas y botón */
+h1, h3, label { 
+    text-align: center; 
+  }
+  
+  /* Centrar el formulario dentro del contenedor */
+  form {
+    max-width: 900px;      /* opcional: limita ancho */
+    margin: 0 auto;        /* centra el bloque */
+  }
+  
+  /* Centrar los radios (la escala 1–5) en cada fila */
+  .scale {
+    display: flex;         /* ya lo tienes si copiaste mi versión anterior */
+    justify-content: center;
+    gap: 12px;
+    margin: 6px 0 18px;
+  }  
